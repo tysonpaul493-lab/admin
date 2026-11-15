@@ -1,0 +1,2 @@
+# Ignore PHP backend on Vercel frontend builds
+backend/

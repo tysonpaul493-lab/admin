@@ -1,16 +1,14 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "cleanUrls": true,
-  "outputDirectory": "frontend/dist",
-  "buildCommand": "npm --prefix frontend run build",
-  "installCommand": "npm --prefix frontend install",
+  "outputDirectory": "dist",
+  "buildCommand": "npm run build",
   "rewrites": [
     {
       "source": "/api/:path*",
       "destination": "https://vocabulary-banner-ram-sons.trycloudflare.com/api/:path*"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!assets/|favicon\\.ico|.*\\..*).*)",
       "destination": "/index.html"
     }
   ]

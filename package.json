@@ -4,7 +4,11 @@
   "private": true,
   "description": "LifeRoute Emergency Ambulance Control Center & Admin Portal",
   "scripts": {
-    "build": "npm --prefix frontend run build",
+    "preinstall": "npm --prefix frontend install",
+    "install": "npm --prefix frontend install",
+    "postinstall": "npm --prefix frontend install",
+    "prebuild": "npm --prefix frontend install",
+    "build": "npm --prefix frontend install && npm --prefix frontend run build && node sync-build.js",
     "dev": "npm --prefix frontend run dev"
   }
 }

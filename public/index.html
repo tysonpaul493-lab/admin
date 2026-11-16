@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" class="w-full max-w-full overflow-x-hidden bg-slate-50">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚑</text></svg>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Life Route - Admin Hospital Command Center</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN Fallback Shield (Guarantees modern styling regardless of build/hosting environment) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+              mono: ['JetBrains Mono', 'Menlo', 'monospace']
+            },
+            colors: {
+              clinical: {
+                50: '#f0fdfa', 100: '#ccfbf1', 200: '#99f6e4', 300: '#5eead4',
+                400: '#2dd4bf', 500: '#14b8a6', 600: '#0d9488', 700: '#0f766e',
+                800: '#115e59', 900: '#134e4a', 950: '#042f2e'
+              },
+              emergency: {
+                50: '#fef2f2', 100: '#fee2e2', 500: '#ef4444', 600: '#dc2626',
+                700: '#b91c1c', 900: '#7f1d1d', 950: '#450a0a'
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      *, ::before, ::after { box-sizing: border-box; }
+      html, body, #root {
+        font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif !important;
+        background-color: #f8fafc;
+        margin: 0;
+        padding: 0;
+      }
+      button { font-family: inherit; }
+    </style>
+    <script type="module" crossorigin src="/assets/index-niZNpGmV.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-Brh9lwia.css">
+  </head>
+  <body class="bg-slate-50 text-slate-900 antialiased w-full max-w-full overflow-x-hidden selection:bg-teal-500 selection:text-white m-0 p-0">
+    <div id="root" class="min-h-screen w-full max-w-full overflow-x-hidden flex flex-col bg-slate-50"></div>
+  </body>
+</html>

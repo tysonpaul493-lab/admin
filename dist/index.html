@@ -11,6 +11,41 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN Fallback Shield (Guarantees modern styling regardless of build/hosting environment) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+              mono: ['JetBrains Mono', 'Menlo', 'monospace']
+            },
+            colors: {
+              clinical: {
+                50: '#f0fdfa', 100: '#ccfbf1', 200: '#99f6e4', 300: '#5eead4',
+                400: '#2dd4bf', 500: '#14b8a6', 600: '#0d9488', 700: '#0f766e',
+                800: '#115e59', 900: '#134e4a', 950: '#042f2e'
+              },
+              emergency: {
+                50: '#fef2f2', 100: '#fee2e2', 500: '#ef4444', 600: '#dc2626',
+                700: '#b91c1c', 900: '#7f1d1d', 950: '#450a0a'
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      *, ::before, ::after { box-sizing: border-box; }
+      html, body, #root {
+        font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif !important;
+        background-color: #f8fafc;
+        margin: 0;
+        padding: 0;
+      }
+      button { font-family: inherit; }
+    </style>
     <script type="module" crossorigin src="/assets/index-niZNpGmV.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-Brh9lwia.css">
   </head>

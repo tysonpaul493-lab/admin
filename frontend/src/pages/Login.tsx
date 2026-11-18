@@ -83,7 +83,7 @@ export const Login: React.FC = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={mfaRequired}
                   className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-600 disabled:opacity-50"
-                  placeholder="admin@gmail.com"
+                  placeholder="staff.admin@liferoute.org"
                 />
               </div>
             </div>
@@ -100,7 +100,7 @@ export const Login: React.FC = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={mfaRequired}
                   className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-600 disabled:opacity-50"
-                  placeholder="Admin@1234"
+                  placeholder="••••••••••••"
                 />
               </div>
             </div>

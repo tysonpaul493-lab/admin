@@ -314,6 +314,7 @@ class LiveSocketService {
   }
 
   private playAlertTone(): void {
+    if (this.isMuted) return;
     try {
       const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
       const osc = ctx.createOscillator();
@@ -331,6 +332,7 @@ class LiveSocketService {
   }
 
   private playChimeTone(): void {
+    if (this.isMuted) return;
     try {
       const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
       const osc = ctx.createOscillator();

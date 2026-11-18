@@ -229,6 +229,7 @@ export interface AuditLog {
 
 export interface MetricItem {
   value: number;
+  formatted?: string;
   available: boolean;
   change?: number;
 }
@@ -236,6 +237,8 @@ export interface MetricItem {
 export interface DashboardStats {
   timestamp?: string;
   metrics: {
+    total_revenue?: MetricItem;
+    today_revenue?: MetricItem;
     total_users?: MetricItem;
     total_verified_drivers?: MetricItem;
     pending_driver_verifications?: MetricItem;

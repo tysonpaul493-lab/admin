@@ -7,9 +7,9 @@ export const Login: React.FC = () => {
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Pre-configured administrator credentials requested by User
-  const [email, setEmail] = useState('admin@gmail.com');
-  const [password, setPassword] = useState('Admin@1234');
+  // Clean, secure administrator credentials state
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [mfaCode, setMfaCode] = useState('');
   const [mfaRequired, setMfaRequired] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,25 +62,6 @@ export const Login: React.FC = () => {
 
         {/* Login Box */}
         <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 shadow-xl">
-          {/* Quick Access Credentials Pill */}
-          <div className="mb-4 p-3 rounded-xl bg-teal-50/80 border border-teal-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-teal-900">
-            <div>
-              <span className="font-bold text-teal-800">Admin Account:</span>{' '}
-              <span className="font-mono font-semibold">admin@gmail.com</span> •{' '}
-              <span className="font-mono text-teal-700">Admin@1234</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setEmail('admin@gmail.com');
-                setPassword('Admin@1234');
-                setError(null);
-              }}
-              className="px-2.5 py-1 rounded-lg bg-teal-600 text-white font-semibold text-[11px] hover:bg-teal-700 transition self-start sm:self-auto"
-            >
-              Reset to Admin
-            </button>
-          </div>
 
           {error && (
             <div className="mb-4 p-3.5 rounded-xl bg-red-50 border border-red-200 flex items-start gap-2.5 text-xs text-red-700">

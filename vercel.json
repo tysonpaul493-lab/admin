@@ -4,11 +4,11 @@
   "buildCommand": "npm run build",
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "https://vocabulary-banner-ram-sons.trycloudflare.com/api/:path*"
+      "source": "/api/(.*)",
+      "destination": "https://bottle-equilibrium-vcr-introductory.trycloudflare.com/api/$1"
     },
     {
-      "source": "/((?!assets/|favicon\\.ico|.*\\..*).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]

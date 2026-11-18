@@ -15,13 +15,15 @@ let memoryAlerts = [...INITIAL_ALERTS];
 let memoryAuditLogs = [...INITIAL_AUDIT_LOGS];
 let memoryStaff = [...INITIAL_STAFF];
 
-const DEFAULT_API_URL = 'https://vocabulary-banner-ram-sons.trycloudflare.com/api/v1';
+const DEFAULT_API_URL = 'https://bottle-equilibrium-vcr-introductory.trycloudflare.com/api/v1';
 
 export const getApiBase = (): string => {
   if (typeof window !== 'undefined') {
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       return '/api/v1';
     }
+    // On Vercel or cloud web hosting, use the active tunnel or relative proxy
+    return (import.meta as any).env?.VITE_API_URL || '/api/v1';
   }
   return (import.meta as any).env?.VITE_API_URL || DEFAULT_API_URL;
 };

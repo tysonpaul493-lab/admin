@@ -15,7 +15,7 @@ let memoryAlerts = [...INITIAL_ALERTS];
 let memoryAuditLogs = [...INITIAL_AUDIT_LOGS];
 let memoryStaff = [...INITIAL_STAFF];
 
-const DEFAULT_API_URL = 'https://bottle-equilibrium-vcr-introductory.trycloudflare.com/api/v1';
+const DEFAULT_API_URL = 'https://posts-duration-leisure-notebook.trycloudflare.com/api/v1';
 
 export const getApiBase = (): string => {
   if (typeof window !== 'undefined') {

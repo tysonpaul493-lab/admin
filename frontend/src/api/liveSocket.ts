@@ -57,7 +57,7 @@ class LiveSocketService {
     try {
       let wsUrl = 'ws://localhost:8080';
       if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        wsUrl = 'wss://campus-virgin-plants-termination.trycloudflare.com';
+        wsUrl = 'wss://reynolds-geo-nature-restaurants.trycloudflare.com';
       }
       console.log(`🔌 [Admin LiveSocket] Connecting to ${wsUrl}...`);
 

@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://bottle-equilibrium-vcr-introductory.trycloudflare.com/api/$1"
+      "destination": "https://posts-duration-leisure-notebook.trycloudflare.com/api/$1"
     },
     {
       "source": "/((?!assets/|.*\\..*).*)",

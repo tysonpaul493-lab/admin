@@ -1,39 +1,65 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api/client';
+import { liveSocket } from '../api/liveSocket';
 import { Booking, Driver, Ambulance } from '../types';
-import { Radio, AlertTriangle, CheckCircle, Clock, Truck, ShieldAlert, ArrowRight } from 'lucide-react';
+import { Radio, AlertTriangle, CheckCircle, Clock, Truck, ShieldAlert, ArrowRight, RefreshCw, UserCheck } from 'lucide-react';
 
 export const Dispatch: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [, setAmbulances] = useState<Ambulance[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedDriverId, setSelectedDriverId] = useState<number | null>(null);
   const [isAssigning, setIsAssigning] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
 
-  const loadData = () => {
-    api.getBookings().then(setBookings).catch(console.warn);
-    api.getDrivers().then(setDrivers).catch(console.warn);
-    api.getAmbulances().then(setAmbulances).catch(console.warn);
+  const loadData = async () => {
+    try {
+      const [bData, dData, aData] = await Promise.all([
+        api.getBookings().catch(() => []),
+        api.getDrivers().catch(() => []),
+        api.getAmbulances().catch(() => []),
+      ]);
+      setBookings(bData);
+      setDrivers(dData);
+      setAmbulances(aData);
+    } catch (e) {
+      console.warn('Dispatch loadData error', e);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 8000);
-    return () => clearInterval(interval);
+    const unsub = liveSocket.onBookingUpdate(() => {
+      loadData();
+    });
+    const interval = setInterval(loadData, 6000);
+    return () => {
+      clearInterval(interval);
+      unsub();
+    };
   }, []);
 
-  const pendingBookings = bookings.filter(b => 
-    ['REQUESTED', 'FAILED_DISPATCH'].includes(b.status)
-  );
+  const pendingBookings = bookings.filter(b => {
+    const s = (b.status || '').toUpperCase();
+    return ['REQUESTED', 'FAILED_DISPATCH', 'PENDING', 'SEARCHING', 'FINDING_AMBULANCE'].includes(s);
+  });
 
-  const activeDispatches = bookings.filter(b => 
-    ['ACCEPTED', 'DISPATCHED', 'EN_ROUTE_TO_PICKUP', 'ARRIVED_AT_PICKUP', 'PATIENT_ON_BOARD', 'EN_ROUTE_TO_HOSPITAL', 'ARRIVED_AT_HOSPITAL'].includes(b.status)
-  );
+  const activeDispatches = bookings.filter(b => {
+    const s = (b.status || '').toUpperCase();
+    return [
+      'ACCEPTED', 'DISPATCHED', 'EN_ROUTE_TO_PICKUP', 'ARRIVED_AT_PICKUP',
+      'PATIENT_ON_BOARD', 'EN_ROUTE_TO_HOSPITAL', 'ARRIVED_AT_HOSPITAL',
+      'DRIVER_ASSIGNED', 'DRIVER_ARRIVED', 'PATIENT_PICKED_UP', 'TRAVELING_TO_HOSPITAL'
+    ].includes(s);
+  });
 
   const availableDrivers = drivers.filter(d => 
-    d.online_status === 'ONLINE' && d.operational_status === 'AVAILABLE'
+    (d.online_status?.toUpperCase() === 'ONLINE' || (d as any).is_online) && 
+    (d.operational_status?.toUpperCase() === 'AVAILABLE' || !(d as any).hasActiveTrip)
   );
 
   const handleAssign = async () => {
@@ -41,9 +67,9 @@ export const Dispatch: React.FC = () => {
     setIsAssigning(true);
     setActionMessage(null);
     try {
-      const res = await api.assignDriver(selectedBooking.id, selectedDriverId);
+      const res = await api.assignDriver(selectedBooking.id, selectedDriverId, 'Manual dispatcher command priority assignment');
       if (res && res.id) {
-        setActionMessage(`Ambulance successfully dispatched to booking #${selectedBooking.booking_reference || selectedBooking.id}`);
+        setActionMessage(`Ambulance successfully dispatched to emergency #${selectedBooking.booking_reference || selectedBooking.id}`);
         setSelectedBooking(null);
         setSelectedDriverId(null);
         loadData();
@@ -67,6 +93,13 @@ export const Dispatch: React.FC = () => {
           <p className="text-sm text-slate-500 mt-1">Real-time emergency queue routing, live fleet deployment, and regional triage.</p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={loadData}
+            className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 transition mr-1"
+            title="Refresh Dispatch Queue"
+          >
+            <RefreshCw className={`w-4 h-4 text-teal-600 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
           <span className="px-3 py-1 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
             {availableDrivers.length} Units Available
           </span>
@@ -93,10 +126,15 @@ export const Dispatch: React.FC = () => {
                 <AlertTriangle className="w-4 h-4 text-rose-500" />
                 Pending Emergency Dispatches ({pendingBookings.length})
               </h2>
-              <span className="text-xs text-slate-400 font-mono">Auto-refreshing</span>
+              <span className="text-xs text-slate-400 font-mono">Live WebSocket Synchronized</span>
             </div>
 
-            {pendingBookings.length === 0 ? (
+            {isLoading ? (
+              <div className="text-center py-12 text-slate-400 text-xs">
+                <RefreshCw className="w-6 h-6 mx-auto mb-2 text-teal-600 animate-spin" />
+                Checking triage emergency calls...
+              </div>
+            ) : pendingBookings.length === 0 ? (
               <div className="text-center py-12 text-slate-400">
                 <CheckCircle className="w-10 h-10 mx-auto text-emerald-500 mb-2 opacity-80" />
                 <p className="text-sm font-semibold text-slate-600">No pending emergency dispatches</p>
@@ -127,7 +165,7 @@ export const Dispatch: React.FC = () => {
                           <p className="text-sm font-bold text-slate-900">{b.patient_name || b.requester_name || 'Emergency Patient'}</p>
                           <p className="text-xs text-slate-500 flex items-center gap-1">
                             <Clock className="w-3.5 h-3.5 text-slate-400" />
-                            {b.pickup_address || `${b.pickup_latitude?.toFixed(4)}, ${b.pickup_longitude?.toFixed(4)}`}
+                            {b.pickup_address || `${b.pickup_latitude?.toFixed(4) || ''}, ${b.pickup_longitude?.toFixed(4) || ''}`}
                           </p>
                         </div>
                         <button
@@ -163,7 +201,9 @@ export const Dispatch: React.FC = () => {
                     <div>
                       <span className="font-mono font-bold text-slate-800 mr-2">#{b.booking_reference || b.id}</span>
                       <span className="font-semibold text-slate-700">{b.patient_name || b.requester_name || 'Emergency'}</span>
-                      <span className="text-slate-400 ml-2">→ Driver: {b.driver?.full_name || 'Assigned'}</span>
+                      <span className="text-slate-400 ml-2">
+                        → Driver: {b.driver?.full_name || (b.driver as any)?.name || (b as any).driver_name || 'Assigned Paramedic'}
+                      </span>
                     </div>
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 uppercase">
                       {b.status}
@@ -189,6 +229,7 @@ export const Dispatch: React.FC = () => {
                   <p className="text-slate-500">Selected Incident:</p>
                   <p className="font-bold text-slate-900">#{selectedBooking.booking_reference || selectedBooking.id}</p>
                   <p className="text-slate-600">{selectedBooking.patient_name || selectedBooking.requester_name || 'Emergency'}</p>
+                  <p className="text-slate-500 text-[11px] truncate">{selectedBooking.pickup_address}</p>
                 </div>
 
                 <div>

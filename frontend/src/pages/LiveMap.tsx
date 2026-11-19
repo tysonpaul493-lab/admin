@@ -331,7 +331,7 @@ export const LiveMap: React.FC = () => {
                 </Marker>
 
                 {/* If Ambulance has an active emergency trip, render pickup and destination markers with polyline route */}
-                {trip && trip.hospital_lat && trip.hospital_lng && (
+                {trip && trip.hospital_lat && trip.hospital_lng && trip.pickup_lat && trip.pickup_lng && !isNaN(trip.pickup_lat) && !isNaN(trip.hospital_lat) && (
                   <>
                     <Marker position={[trip.pickup_lat, trip.pickup_lng]} icon={pickupIcon}>
                       <Popup className="custom-popup">

@@ -269,7 +269,14 @@ export const Dashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {stats.recent_activity.map((b: any) => (
+              {!stats.recent_activity || stats.recent_activity.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-8 text-center text-slate-400 font-medium">
+                    No recent emergency admissions recorded in current shift.
+                  </td>
+                </tr>
+              ) : (
+                stats.recent_activity.map((b: any) => (
                 <tr key={b.id} className="hover:bg-slate-50/80 transition">
                   <td className="py-4 px-4 font-mono font-bold text-slate-900">
                     <Link to={`/bookings?search=${b.booking_reference || b.reference}`} className="hover:text-teal-600 hover:underline">
@@ -304,18 +311,22 @@ export const Dashboard: React.FC = () => {
                   <td className="py-4 px-4 text-slate-700 max-w-xs truncate">
                     <span className="flex items-center gap-1.5 font-medium text-slate-800">
                       <Building2 className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                      <span className="truncate">{b.hospital ? b.hospital.name : b.hospital_name}</span>
+                      <span className="truncate">{b.hospital ? b.hospital.name : (b.hospital_name || b.destination || 'Receiving Trauma Hospital')}</span>
                     </span>
                   </td>
                   <td className="py-4 px-4">
-                    {b.driver ? (
-                      <div>
-                        <div className="text-slate-800 font-medium">{b.driver.full_name}</div>
-                        <div className="text-[10px] text-slate-600 font-mono font-semibold">{b.ambulance?.registration_number}</div>
-                      </div>
-                    ) : (
-                      <span className="text-amber-600 text-[11px] font-mono italic">Pending Crew</span>
-                    )}
+                    {(() => {
+                      const dName = b.driver?.full_name || b.driver?.name || (b.driver_name !== 'Unassigned' ? b.driver_name : null);
+                      const regNum = b.ambulance?.registration_number || (b.vehicle_plate !== 'N/A' && b.vehicle_plate !== '--' ? b.vehicle_plate : null);
+                      return dName ? (
+                        <div>
+                          <div className="text-slate-800 font-medium">{dName}</div>
+                          <div className="text-[10px] text-slate-600 font-mono font-semibold">{regNum || 'Assigned 108 Unit'}</div>
+                        </div>
+                      ) : (
+                        <span className="text-amber-600 text-[11px] font-mono italic">Pending Crew</span>
+                      );
+                    })()}
                   </td>
                   <td className="py-4 px-4">
                     <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold font-mono ${
@@ -337,7 +348,7 @@ export const Dashboard: React.FC = () => {
                     })()}
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>

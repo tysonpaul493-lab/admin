@@ -132,26 +132,30 @@ export const Bookings: React.FC = () => {
   };
 
   // Segregate LIVE Ongoing Trips vs HISTORICAL Trips
-  const isFinishedStatus = (status: BookingStatus) => ['COMPLETED', 'CANCELLED', 'FAILED_DISPATCH'].includes(status);
+  const isFinishedStatus = (status: BookingStatus) => {
+    const s = (status || '').toUpperCase();
+    return ['COMPLETED', 'CANCELLED', 'FAILED_DISPATCH', 'TRIP_COMPLETED'].includes(s);
+  };
 
   const liveBookings = bookings.filter(b => !isFinishedStatus(b.status));
   const historyBookings = bookings.filter(b => isFinishedStatus(b.status));
 
-  const completedCount = historyBookings.filter(b => b.status === 'COMPLETED').length;
-  const cancelledUserCount = historyBookings.filter(b => b.status === 'CANCELLED' && b.cancelled_by_type !== 'ADMIN').length;
-  const cancelledAdminCount = historyBookings.filter(b => b.status === 'CANCELLED' && b.cancelled_by_type === 'ADMIN').length;
+  const completedCount = historyBookings.filter(b => (b.status || '').toUpperCase() === 'COMPLETED' || (b.status || '').toUpperCase() === 'TRIP_COMPLETED').length;
+  const cancelledUserCount = historyBookings.filter(b => (b.status || '').toUpperCase() === 'CANCELLED' && b.cancelled_by_type !== 'ADMIN').length;
+  const cancelledAdminCount = historyBookings.filter(b => (b.status || '').toUpperCase() === 'CANCELLED' && b.cancelled_by_type === 'ADMIN').length;
 
   // Filtered dataset for Active Tab
   const displayedBookings = (activeTab === 'LIVE' ? liveBookings : historyBookings).filter(b => {
+    const bStatus = (b.status || '').toUpperCase();
     if (activeTab === 'LIVE') {
-      if (liveStatusFilter !== 'ALL' && b.status !== liveStatusFilter) return false;
+      if (liveStatusFilter !== 'ALL' && bStatus !== liveStatusFilter.toUpperCase()) return false;
     } else {
-      if (historyFilter === 'COMPLETED' && b.status !== 'COMPLETED') return false;
-      if (historyFilter === 'CANCELLED_USER' && (b.status !== 'CANCELLED' || b.cancelled_by_type === 'ADMIN')) return false;
-      if (historyFilter === 'CANCELLED_ADMIN' && (b.status !== 'CANCELLED' || b.cancelled_by_type !== 'ADMIN')) return false;
+      if (historyFilter === 'COMPLETED' && bStatus !== 'COMPLETED' && bStatus !== 'TRIP_COMPLETED') return false;
+      if (historyFilter === 'CANCELLED_USER' && (bStatus !== 'CANCELLED' || b.cancelled_by_type === 'ADMIN')) return false;
+      if (historyFilter === 'CANCELLED_ADMIN' && (bStatus !== 'CANCELLED' || b.cancelled_by_type !== 'ADMIN')) return false;
     }
 
-    if (severityFilter !== 'ALL' && b.severity !== severityFilter) return false;
+    if (severityFilter !== 'ALL' && (b.severity || '').toUpperCase() !== severityFilter.toUpperCase()) return false;
 
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
@@ -159,7 +163,7 @@ export const Bookings: React.FC = () => {
       const reqMatch = b.requester_name?.toLowerCase().includes(term) || b.requester_phone?.includes(term);
       const patMatch = b.patient_name?.toLowerCase().includes(term);
       const addrMatch = b.pickup_address?.toLowerCase().includes(term);
-      const driverMatch = b.driver?.full_name?.toLowerCase().includes(term) || b.driver?.phone?.includes(term);
+      const driverMatch = b.driver?.full_name?.toLowerCase().includes(term) || (b.driver as any)?.name?.toLowerCase().includes(term) || b.driver?.phone?.includes(term);
       const plateMatch = b.ambulance?.registration_number?.toLowerCase().includes(term);
       if (!refMatch && !reqMatch && !patMatch && !addrMatch && !driverMatch && !plateMatch) return false;
     }
@@ -168,7 +172,7 @@ export const Bookings: React.FC = () => {
   });
 
   const eligibleDrivers = drivers.filter(d => 
-    d.verification_status === 'APPROVED' &&
+    (d.verification_status?.toUpperCase() === 'APPROVED' || !d.verification_status) &&
     !bookings.some(b => b.driver_id === d.id && !isFinishedStatus(b.status))
   );
 
@@ -711,7 +715,7 @@ export const Bookings: React.FC = () => {
                         <div className="text-xs">
                           <span className="text-slate-500 block text-[11px]">Paramedic GPS Coordinates:</span>
                           <span className="font-mono text-slate-700 text-[11px]">
-                            {b.driver.current_latitude?.toFixed(4)}, {b.driver.current_longitude?.toFixed(4)}
+                            {b.driver.current_latitude != null ? `${b.driver.current_latitude.toFixed(4)}, ${b.driver.current_longitude?.toFixed(4)}` : 'Live GPS Calibrating...'}
                           </span>
                         </div>
                       </>
@@ -951,8 +955,8 @@ export const Bookings: React.FC = () => {
                 <h3 className="font-bold text-indigo-700 uppercase font-mono tracking-wider text-[11px] flex items-center gap-1.5">
                   <Building2 className="w-3.5 h-3.5" /> Receiving Facility
                 </h3>
-                <div><span className="text-slate-500">Facility:</span> <span className="text-slate-900 font-semibold">{selectedBooking.hospital?.name}</span></div>
-                <div><span className="text-slate-500">Address:</span> <span className="text-slate-700">{selectedBooking.hospital?.address}</span></div>
+                <div><span className="text-slate-500">Facility:</span> <span className="text-slate-900 font-semibold">{selectedBooking.hospital?.name || (selectedBooking as any).hospital_name || (selectedBooking as any).destination || 'Designated Receiving Facility'}</span></div>
+                <div><span className="text-slate-500">Address:</span> <span className="text-slate-700">{selectedBooking.hospital?.address || (selectedBooking as any).destination_address || 'Central District'}</span></div>
                 <div><span className="text-slate-500">ER Hotline:</span> <span className="text-teal-700 font-mono font-bold">{selectedBooking.hospital?.emergency_contact || '108'}</span></div>
                 <div><span className="text-slate-500">Trauma Level:</span> <span className="text-emerald-700 font-semibold">Level 1 24x7 Casualty</span></div>
               </div>

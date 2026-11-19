@@ -55,9 +55,11 @@ class LiveSocketService {
     }
 
     try {
-      let wsUrl = 'ws://localhost:8080';
-      if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        wsUrl = 'wss://reynolds-geo-nature-restaurants.trycloudflare.com';
+      let wsUrl = 'ws://127.0.0.1:8080';
+      if (typeof window !== 'undefined') {
+        if (window.location.protocol === 'https:' || (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1')) {
+          wsUrl = 'wss://reynolds-geo-nature-restaurants.trycloudflare.com';
+        }
       }
       console.log(`🔌 [Admin LiveSocket] Connecting to ${wsUrl}...`);
 

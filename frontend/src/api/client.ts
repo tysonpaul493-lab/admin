@@ -19,6 +19,9 @@ const DEFAULT_API_URL = 'https://posts-duration-leisure-notebook.trycloudflare.c
 
 export const getApiBase = (): string => {
   if (typeof window !== 'undefined') {
+    if (window.location.protocol === 'file:') {
+      return (import.meta as any).env?.VITE_API_URL || DEFAULT_API_URL;
+    }
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       return '/api/v1';
     }
@@ -795,6 +798,21 @@ export const api = {
 
   // Operational Alerts
   async getAlerts(): Promise<OperationalAlert[]> {
+    try {
+      const token = getToken();
+      const res = await fetchWithFallback('/alerts', {
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const list = json.data || json;
+        if (Array.isArray(list) && list.length > 0) {
+          return list;
+        }
+      }
+    } catch (e) {
+      console.warn('getAlerts API call failed, using local store', e);
+    }
     return [...memoryAlerts];
   },
 
@@ -842,6 +860,21 @@ export const api = {
 
   // Audit Logs
   async getAuditLogs(): Promise<AuditLog[]> {
+    try {
+      const token = getToken();
+      const res = await fetchWithFallback('/audit-logs', {
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const list = json.data || json;
+        if (Array.isArray(list) && list.length > 0) {
+          return list;
+        }
+      }
+    } catch (e) {
+      console.warn('getAuditLogs API call failed, using local store', e);
+    }
     return [...memoryAuditLogs];
   }
 };

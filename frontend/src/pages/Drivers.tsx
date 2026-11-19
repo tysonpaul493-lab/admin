@@ -184,7 +184,7 @@ export const Drivers: React.FC = () => {
 
       {/* Drivers Table */}
       <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs w-full max-w-full">
-        <div className="w-full max-w-full overflow-hidden">
+        <div className="w-full max-w-full overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse table-auto">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-mono text-[11px] uppercase tracking-wider">

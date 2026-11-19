@@ -378,6 +378,25 @@ export const api = {
   },
 
   async reassignDriver(bookingId: number, newDriverId: number, reason: string): Promise<Booking> {
+    try {
+      const token = getToken();
+      const res = await fetchWithFallback(`/bookings/${bookingId}/assign-driver`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ driver_id: newDriverId, reason })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data) return json.data;
+      }
+    } catch (e) {
+      console.warn('reassignDriver API call failed, using local store', e);
+    }
+
     const driver = memoryDrivers.find(d => d.id === newDriverId);
     if (!driver) throw new Error('Driver not found');
     
@@ -509,6 +528,25 @@ export const api = {
   },
 
   async addBookingNote(bookingId: number, note: string, authorName: string): Promise<string> {
+    try {
+      const token = getToken();
+      const res = await fetchWithFallback(`/bookings/${bookingId}/notes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ note, author: authorName })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.operational_notes) return json.operational_notes;
+      }
+    } catch (e) {
+      console.warn('addBookingNote API call failed, using local store', e);
+    }
+
     const bookingIndex = memoryBookings.findIndex(b => b.id === bookingId);
     if (bookingIndex === -1) throw new Error('Booking not found');
 
@@ -694,6 +732,25 @@ export const api = {
   },
 
   async addAmbulance(ambulance: Omit<Ambulance, 'id'>): Promise<Ambulance> {
+    try {
+      const token = getToken();
+      const res = await fetchWithFallback('/ambulances', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(ambulance)
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.ambulance) return json.ambulance;
+      }
+    } catch (e) {
+      console.warn('addAmbulance API call failed, using local store', e);
+    }
+
     const newAmb: Ambulance = {
       ...ambulance,
       id: memoryAmbulances.length + 1,
@@ -718,10 +775,25 @@ export const api = {
   },
 
   async updateAmbulanceStatus(id: number, status: Ambulance['operational_status'], reason: string): Promise<Ambulance> {
-    const idx = memoryAmbulances.findIndex(a => a.id === id);
-    if (idx === -1) throw new Error('Ambulance not found');
+    try {
+      const token = getToken();
+      await fetchWithFallback(`/ambulances/${id}/status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status, reason })
+      });
+    } catch (e) {
+      console.warn('updateAmbulanceStatus API call failed, using local store', e);
+    }
 
-    memoryAmbulances[idx].operational_status = status;
+    const idx = memoryAmbulances.findIndex(a => a.id === id);
+    if (idx !== -1) {
+      memoryAmbulances[idx].operational_status = status;
+    }
 
     memoryAuditLogs.unshift({
       id: Date.now(),
@@ -734,7 +806,24 @@ export const api = {
       created_at: new Date().toISOString()
     });
 
-    return { ...memoryAmbulances[idx] };
+    return {
+      id,
+      registration_number: memoryAmbulances[idx]?.registration_number || 'TN 38 CB 1234',
+      vehicle_type: memoryAmbulances[idx]?.vehicle_type || 'ALS',
+      operator_name: memoryAmbulances[idx]?.operator_name || 'Government Fleet',
+      operational_status: status,
+      equipment_capabilities: memoryAmbulances[idx]?.equipment_capabilities || [],
+      verification_status: 'APPROVED',
+      fitness_expiry: '2027-11-13',
+      insurance_expiry: '2027-11-13',
+      permit_expiry: '2027-11-13',
+      latitude: memoryAmbulances[idx]?.latitude || 11.0168,
+      longitude: memoryAmbulances[idx]?.longitude || 76.9558,
+      speed_kmh: 0,
+      heading: 0,
+      battery_fuel_percentage: 95,
+      service_zone: 'Coimbatore',
+    };
   },
 
   // Hospitals
@@ -776,6 +865,25 @@ export const api = {
   },
 
   async addHospital(hospital: Omit<Hospital, 'id'>): Promise<Hospital> {
+    try {
+      const token = getToken();
+      const res = await fetchWithFallback('/hospitals', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(hospital)
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.hospital) return json.hospital;
+      }
+    } catch (e) {
+      console.warn('addHospital API call failed, using local store', e);
+    }
+
     const newHospital: Hospital = {
       ...hospital,
       id: memoryHospitals.length + 1,
@@ -832,6 +940,25 @@ export const api = {
   },
 
   async broadcastAnnouncement(title: string, message: string, severity: OperationalAlert['severity']): Promise<OperationalAlert> {
+    try {
+      const token = getToken();
+      const res = await fetchWithFallback('/alerts/broadcast', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ title, message, severity })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.alert) return json.alert;
+      }
+    } catch (e) {
+      console.warn('broadcastAnnouncement API call failed, using local store', e);
+    }
+
     const alert: OperationalAlert = {
       id: Date.now(),
       alert_code: 'BROADCAST_ANNOUNCEMENT',

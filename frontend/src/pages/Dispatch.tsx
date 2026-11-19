@@ -59,7 +59,7 @@ export const Dispatch: React.FC = () => {
 
   const availableDrivers = drivers.filter(d => 
     (d.online_status?.toUpperCase() === 'ONLINE' || (d as any).is_online) && 
-    (d.operational_status?.toUpperCase() === 'AVAILABLE' || !(d as any).hasActiveTrip)
+    d.operational_status?.toUpperCase() === 'AVAILABLE'
   );
 
   const handleAssign = async () => {

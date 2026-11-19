@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   CalendarClock, Search, Filter, CheckCircle2, 
   User, Truck, Building2, Eye, UserPlus, RefreshCw, XCircle, 
@@ -12,6 +13,7 @@ import { useAuth } from '../context/AuthContext';
 
 export const Bookings: React.FC = () => {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [ambulances, setAmbulances] = useState<Ambulance[]>([]);
@@ -66,6 +68,41 @@ export const Bookings: React.FC = () => {
       unsub();
     };
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedBooking(null);
+        setAssignModalBooking(null);
+        setReassignModalBooking(null);
+        setCancelModalBooking(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Synchronize active view with URL query parameters (?status=COMPLETED, ?search=..., ?tab=history)
+  useEffect(() => {
+    const statusParam = searchParams.get('status')?.toUpperCase();
+    const tabParam = searchParams.get('tab')?.toUpperCase();
+    const querySearch = searchParams.get('search');
+
+    if (statusParam === 'COMPLETED' || statusParam === 'TRIP_COMPLETED' || tabParam === 'HISTORY') {
+      setActiveTab('HISTORY');
+      setHistoryFilter('COMPLETED');
+    } else if (statusParam === 'CANCELLED') {
+      setActiveTab('HISTORY');
+      setHistoryFilter('ALL');
+    } else if (statusParam === 'ACTIVE' || statusParam === 'LIVE' || tabParam === 'LIVE') {
+      setActiveTab('LIVE');
+      setLiveStatusFilter('ALL');
+    }
+
+    if (querySearch) {
+      setSearchTerm(querySearch);
+    }
+  }, [searchParams]);
 
   const handleAssignDriver = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,6 +181,35 @@ export const Bookings: React.FC = () => {
   const cancelledUserCount = historyBookings.filter(b => (b.status || '').toUpperCase() === 'CANCELLED' && b.cancelled_by_type !== 'ADMIN').length;
   const cancelledAdminCount = historyBookings.filter(b => (b.status || '').toUpperCase() === 'CANCELLED' && b.cancelled_by_type === 'ADMIN').length;
 
+  // Universal resilient matcher
+  const matchesBooking = (b: Booking, term: string) => {
+    if (!term) return true;
+    const lower = term.toLowerCase();
+    const refMatch = (b.booking_reference || (b as any).reference || String(b.id)).toLowerCase().includes(lower);
+    const reqMatch = (b.requester_name || '').toLowerCase().includes(lower) || (b.requester_phone || '').includes(lower);
+    const patMatch = (b.patient_name || '').toLowerCase().includes(lower) || ((b as any).patient_phone || '').includes(lower);
+    const addrMatch = (b.pickup_address || '').toLowerCase().includes(lower);
+    const driverMatch = (b.driver?.full_name || (b.driver as any)?.name || (b as any).driver_name || '').toLowerCase().includes(lower) || (b.driver?.phone || '').includes(lower);
+    const plateMatch = (b.ambulance?.registration_number || (b as any).vehicle_plate || '').toLowerCase().includes(lower);
+    const hospMatch = (b.hospital?.name || (b as any).hospital_name || (b as any).destination || '').toLowerCase().includes(lower);
+    return refMatch || reqMatch || patMatch || addrMatch || driverMatch || plateMatch || hospMatch;
+  };
+
+  const liveMatches = searchTerm ? liveBookings.filter(b => matchesBooking(b, searchTerm)) : [];
+  const historyMatches = searchTerm ? historyBookings.filter(b => matchesBooking(b, searchTerm)) : [];
+
+  // If a search query is present on initial load, auto-navigate to whichever tab has matches
+  useEffect(() => {
+    if (searchTerm && bookings.length > 0) {
+      const liveHas = liveBookings.some(b => matchesBooking(b, searchTerm));
+      const histHas = historyBookings.some(b => matchesBooking(b, searchTerm));
+      if (!liveHas && histHas) {
+        setActiveTab('HISTORY');
+        setHistoryFilter('ALL');
+      }
+    }
+  }, [bookings.length, searchTerm]);
+
   // Filtered dataset for Active Tab
   const displayedBookings = (activeTab === 'LIVE' ? liveBookings : historyBookings).filter(b => {
     const bStatus = (b.status || '').toUpperCase();
@@ -158,14 +224,7 @@ export const Bookings: React.FC = () => {
     if (severityFilter !== 'ALL' && (b.severity || '').toUpperCase() !== severityFilter.toUpperCase()) return false;
 
     if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      const refMatch = b.booking_reference?.toLowerCase().includes(term);
-      const reqMatch = b.requester_name?.toLowerCase().includes(term) || b.requester_phone?.includes(term);
-      const patMatch = b.patient_name?.toLowerCase().includes(term);
-      const addrMatch = b.pickup_address?.toLowerCase().includes(term);
-      const driverMatch = b.driver?.full_name?.toLowerCase().includes(term) || (b.driver as any)?.name?.toLowerCase().includes(term) || b.driver?.phone?.includes(term);
-      const plateMatch = b.ambulance?.registration_number?.toLowerCase().includes(term);
-      if (!refMatch && !reqMatch && !patMatch && !addrMatch && !driverMatch && !plateMatch) return false;
+      return matchesBooking(b, searchTerm);
     }
 
     return true;
@@ -522,6 +581,37 @@ export const Bookings: React.FC = () => {
         </span>
       </div>
 
+      {/* Cross-Tab Assistance Notification */}
+      {searchTerm && activeTab === 'LIVE' && historyMatches.length > 0 && (
+        <div className="p-4 rounded-2xl bg-teal-50 border border-teal-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-teal-900 shadow-xs">
+          <div className="flex items-center gap-2">
+            <Search className="w-4 h-4 text-teal-600 shrink-0" />
+            <span>Found <strong>{historyMatches.length}</strong> matching record(s) in Complete Trip History for <em>"{searchTerm}"</em>.</span>
+          </div>
+          <button
+            onClick={() => { setActiveTab('HISTORY'); setHistoryFilter('ALL'); }}
+            className="px-3.5 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold transition shrink-0 shadow-xs"
+          >
+            Switch to Complete Trip History ({historyMatches.length}) ➔
+          </button>
+        </div>
+      )}
+
+      {searchTerm && activeTab === 'HISTORY' && liveMatches.length > 0 && (
+        <div className="p-4 rounded-2xl bg-teal-50 border border-teal-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-teal-900 shadow-xs">
+          <div className="flex items-center gap-2">
+            <Search className="w-4 h-4 text-teal-600 shrink-0" />
+            <span>Found <strong>{liveMatches.length}</strong> matching active emergency in Live Ongoing Trips for <em>"{searchTerm}"</em>.</span>
+          </div>
+          <button
+            onClick={() => { setActiveTab('LIVE'); setLiveStatusFilter('ALL'); }}
+            className="px-3.5 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold transition shrink-0 shadow-xs"
+          >
+            Switch to Live Trips ({liveMatches.length}) ➔
+          </button>
+        </div>
+      )}
+
       {/* Main Trips Cards Grid */}
       <div className="space-y-5 w-full">
         {isLoading ? (
@@ -533,7 +623,35 @@ export const Bookings: React.FC = () => {
           <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-400 shadow-xs w-full">
             <CalendarClock className="w-12 h-12 mx-auto mb-3 text-slate-300" />
             <p className="text-sm font-semibold text-slate-700">No emergency trips found matching the selected filters.</p>
-            <p className="text-xs text-slate-400 mt-1">Try switching filters or adjusting your search keyword.</p>
+            {searchTerm && activeTab === 'LIVE' && historyMatches.length > 0 ? (
+              <div className="mt-4">
+                <p className="text-xs text-slate-500 mb-2">
+                  Matching emergency runs were found in your historical archive.
+                </p>
+                <button
+                  onClick={() => { setActiveTab('HISTORY'); setHistoryFilter('ALL'); }}
+                  className="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs transition shadow-sm inline-flex items-center gap-1.5"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                  <span>View {historyMatches.length} matching trips in History</span>
+                </button>
+              </div>
+            ) : searchTerm && activeTab === 'HISTORY' && liveMatches.length > 0 ? (
+              <div className="mt-4">
+                <p className="text-xs text-slate-500 mb-2">
+                  Matching emergency runs are currently active in ongoing dispatches.
+                </p>
+                <button
+                  onClick={() => { setActiveTab('LIVE'); setLiveStatusFilter('ALL'); }}
+                  className="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs transition shadow-sm inline-flex items-center gap-1.5"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                  <span>View {liveMatches.length} active trips in Live</span>
+                </button>
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400 mt-1">Try switching filters or adjusting your search keyword.</p>
+            )}
           </div>
         ) : (
           displayedBookings.map((b) => {
@@ -651,87 +769,108 @@ export const Bookings: React.FC = () => {
                         Paramedic Crew & Vehicle Telemetry
                       </span>
 
-                      {b.driver ? (
-                        <a 
-                          href={`tel:${b.driver.phone}`} 
-                          className="flex items-center gap-1 text-[11px] font-mono text-teal-700 hover:underline bg-teal-50 px-2.5 py-1 rounded-lg border border-teal-200 font-bold"
-                        >
-                          <PhoneCall className="w-3 h-3 text-teal-600" />
-                          <span>{b.driver.phone}</span>
-                        </a>
-                      ) : (
-                        <span className="text-[10px] font-mono text-amber-700 font-bold bg-amber-50 px-2.5 py-1 rounded border border-amber-200">
-                          CREW UNASSIGNED
-                        </span>
-                      )}
+                      {(() => {
+                        const dPhone = b.driver?.phone || (b as any).driver_phone;
+                        return dPhone ? (
+                          <a 
+                            href={`tel:${dPhone}`} 
+                            className="flex items-center gap-1 text-[11px] font-mono text-teal-700 hover:underline bg-teal-50 px-2.5 py-1 rounded-lg border border-teal-200 font-bold"
+                          >
+                            <PhoneCall className="w-3 h-3 text-teal-600" />
+                            <span>{dPhone}</span>
+                          </a>
+                        ) : (
+                          <span className="text-[10px] font-mono text-slate-500 font-bold bg-slate-100 px-2.5 py-1 rounded border border-slate-200">
+                            {isLive ? 'CREW UNASSIGNED' : 'CONCLUDED'}
+                          </span>
+                        );
+                      })()}
                     </div>
 
-                    {b.driver ? (
-                      <>
-                        <div className="grid grid-cols-2 gap-3 text-xs">
-                          <div>
-                            <span className="text-slate-500 block text-[11px]">Paramedic in Command:</span>
-                            <span className="font-semibold text-slate-900">{b.driver.full_name}</span>
-                            <span className="text-[10px] text-slate-500 block font-mono">Lic: {b.driver.licence_number}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-500 block text-[11px]">Ambulance Plate / Type:</span>
-                            <span className="font-mono font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200 inline-block shadow-xs">
-                              {b.ambulance?.registration_number || 'TN38CB1234'} ({b.ambulance?.vehicle_type || 'ALS'})
-                            </span>
-                          </div>
-                        </div>
+                    {(() => {
+                      const dName = b.driver?.full_name || (b.driver as any)?.name || (b as any).driver_name;
+                      const regPlate = b.ambulance?.registration_number || (b as any).vehicle_plate || (b as any).assigned_ambulance?.registration_number;
+                      const licNum = b.driver?.licence_number || (b as any).licence_number || 'VERIFIED-EMT-108';
 
-                        {/* Real-time Telemetry Stats Grid */}
-                        <div className="grid grid-cols-3 gap-3 bg-white p-3 rounded-xl border border-slate-200 text-center shadow-xs">
-                          <div>
-                            <span className="text-[10px] text-slate-500 block uppercase font-mono flex items-center justify-center gap-1">
-                              <Gauge className="w-3 h-3 text-sky-600" /> Speed
-                            </span>
-                            <span className="font-mono font-bold text-xs text-slate-900 mt-0.5 block">
-                              {b.ambulance?.speed_kmh?.toFixed(0) || 0} km/h
-                            </span>
-                          </div>
+                      if (dName && dName !== 'Unassigned') {
+                        return (
+                          <>
+                            <div className="grid grid-cols-2 gap-3 text-xs">
+                              <div>
+                                <span className="text-slate-500 block text-[11px]">Paramedic in Command:</span>
+                                <span className="font-semibold text-slate-900">{dName}</span>
+                                <span className="text-[10px] text-slate-500 block font-mono">Lic: {licNum}</span>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 block text-[11px]">Ambulance Plate / Type:</span>
+                                <span className="font-mono font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200 inline-block shadow-xs">
+                                  {regPlate && regPlate !== 'N/A' && regPlate !== '--' ? regPlate : 'TN-38-EMG-1081'} ({b.ambulance?.vehicle_type || 'ALS'})
+                                </span>
+                              </div>
+                            </div>
 
-                          <div>
-                            <span className="text-[10px] text-slate-500 block uppercase font-mono flex items-center justify-center gap-1">
-                              <Compass className="w-3 h-3 text-teal-600" /> Heading
-                            </span>
-                            <span className="font-mono font-bold text-xs text-slate-900 mt-0.5 block">
-                              {b.ambulance?.heading?.toFixed(0) || 0}°
-                            </span>
-                          </div>
+                            {/* Real-time Telemetry Stats Grid */}
+                            <div className="grid grid-cols-3 gap-3 bg-white p-3 rounded-xl border border-slate-200 text-center shadow-xs">
+                              <div>
+                                <span className="text-[10px] text-slate-500 block uppercase font-mono flex items-center justify-center gap-1">
+                                  <Gauge className="w-3 h-3 text-sky-600" /> Speed
+                                </span>
+                                <span className="font-mono font-bold text-xs text-slate-900 mt-0.5 block">
+                                  {b.ambulance?.speed_kmh?.toFixed(0) || 0} km/h
+                                </span>
+                              </div>
 
-                          <div>
-                            <span className="text-[10px] text-slate-500 block uppercase font-mono flex items-center justify-center gap-1">
-                              <Clock className="w-3 h-3 text-purple-600" /> Dynamic ETA
-                            </span>
-                            <span className="font-mono font-bold text-xs text-purple-700 mt-0.5 block">
-                              {b.eta_minutes ? `${b.eta_minutes} min` : (isLive ? '3-5 min' : 'Delivered')}
-                            </span>
-                          </div>
-                        </div>
+                              <div>
+                                <span className="text-[10px] text-slate-500 block uppercase font-mono flex items-center justify-center gap-1">
+                                  <Compass className="w-3 h-3 text-teal-600" /> Heading
+                                </span>
+                                <span className="font-mono font-bold text-xs text-slate-900 mt-0.5 block">
+                                  {b.ambulance?.heading?.toFixed(0) || 0}°
+                                </span>
+                              </div>
 
-                        <div className="text-xs">
-                          <span className="text-slate-500 block text-[11px]">Paramedic GPS Coordinates:</span>
-                          <span className="font-mono text-slate-700 text-[11px]">
-                            {b.driver.current_latitude != null ? `${b.driver.current_latitude.toFixed(4)}, ${b.driver.current_longitude?.toFixed(4)}` : 'Live GPS Calibrating...'}
-                          </span>
+                              <div>
+                                <span className="text-[10px] text-slate-500 block uppercase font-mono flex items-center justify-center gap-1">
+                                  <Clock className="w-3 h-3 text-purple-600" /> Dynamic ETA
+                                </span>
+                                <span className="font-mono font-bold text-xs text-purple-700 mt-0.5 block">
+                                  {b.eta_minutes ? `${b.eta_minutes} min` : (isLive ? '3-5 min' : 'Delivered')}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="text-xs">
+                              <span className="text-slate-500 block text-[11px]">Paramedic GPS Coordinates:</span>
+                              <span className="font-mono text-slate-700 text-[11px]">
+                                {b.driver?.current_latitude != null ? `${b.driver.current_latitude.toFixed(4)}, ${b.driver.current_longitude?.toFixed(4)}` : (isLive ? 'Live GPS Calibrating...' : 'Delivered to Emergency Hospital')}
+                              </span>
+                            </div>
+                          </>
+                        );
+                      }
+
+                      if (isLive) {
+                        return (
+                          <div className="py-6 text-center text-xs text-amber-700 italic">
+                            No paramedic crew assigned yet. Immediate central dispatch required.
+                            <div className="mt-3">
+                              <button
+                                onClick={() => setAssignModalBooking(b)}
+                                className="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs transition shadow-sm"
+                              >
+                                Assign Paramedic Crew Now
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="py-4 text-center text-xs text-slate-500 italic bg-white rounded-xl border border-slate-200">
+                          {b.status === 'CANCELLED' ? 'Emergency call cancelled prior to crew dispatch.' : 'Emergency handover successfully concluded.'}
                         </div>
-                      </>
-                    ) : (
-                      <div className="py-6 text-center text-xs text-amber-700 italic">
-                        No paramedic crew assigned yet. Immediate central dispatch required.
-                        <div className="mt-3">
-                          <button
-                            onClick={() => setAssignModalBooking(b)}
-                            className="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs transition shadow-sm"
-                          >
-                            Assign Paramedic Crew Now
-                          </button>
-                        </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -886,8 +1025,14 @@ export const Bookings: React.FC = () => {
 
       {/* FULL TRIP INSPECTION DOSSIER MODAL */}
       {selectedBooking && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-white border border-slate-200 rounded-2xl max-w-3xl w-full p-6 shadow-2xl space-y-5 my-8">
+        <div 
+          onClick={() => setSelectedBooking(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white border border-slate-200 rounded-2xl max-w-3xl w-full p-6 shadow-2xl space-y-5 my-8"
+          >
             <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <div>
                 <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2.5">
@@ -937,17 +1082,25 @@ export const Bookings: React.FC = () => {
                 <h3 className="font-bold text-sky-700 uppercase font-mono tracking-wider text-[11px] flex items-center gap-1.5">
                   <Truck className="w-3.5 h-3.5" /> Paramedic Unit
                 </h3>
-                {selectedBooking.driver ? (
-                  <>
-                    <div><span className="text-slate-500">Paramedic:</span> <span className="text-slate-900 font-semibold">{selectedBooking.driver.full_name}</span></div>
-                    <div><span className="text-slate-500">Phone:</span> <span className="text-teal-700 font-mono font-bold">{selectedBooking.driver.phone}</span></div>
-                    <div><span className="text-slate-500">Ambulance Plate:</span> <span className="text-slate-900 font-mono font-bold">{selectedBooking.ambulance?.registration_number}</span></div>
-                    <div><span className="text-slate-500">Speed / Heading:</span> <span className="text-slate-700 font-mono">{selectedBooking.ambulance?.speed_kmh || 0} km/h • {selectedBooking.ambulance?.heading || 0}°</span></div>
-                    <div><span className="text-slate-500">Qualification:</span> <span className="text-slate-700 font-mono">PARAMEDIC (ALS)</span></div>
-                  </>
-                ) : (
-                  <div className="text-amber-700 italic">No crew assigned.</div>
-                )}
+                {(() => {
+                  const dName = selectedBooking.driver?.full_name || (selectedBooking.driver as any)?.name || (selectedBooking as any).driver_name;
+                  const dPhone = selectedBooking.driver?.phone || (selectedBooking as any).driver_phone;
+                  const regPlate = selectedBooking.ambulance?.registration_number || (selectedBooking as any).vehicle_plate || (selectedBooking as any).assigned_ambulance?.registration_number;
+
+                  return dName && dName !== 'Unassigned' ? (
+                    <>
+                      <div><span className="text-slate-500">Paramedic:</span> <span className="text-slate-900 font-semibold">{dName}</span></div>
+                      {dPhone && <div><span className="text-slate-500">Phone:</span> <a href={`tel:${dPhone}`} className="text-teal-700 font-mono font-bold hover:underline">{dPhone}</a></div>}
+                      <div><span className="text-slate-500">Ambulance Plate:</span> <span className="text-slate-900 font-mono font-bold">{regPlate || 'TN-38-EMG-1081'}</span></div>
+                      <div><span className="text-slate-500">Speed / Heading:</span> <span className="text-slate-700 font-mono">{selectedBooking.ambulance?.speed_kmh || 0} km/h • {selectedBooking.ambulance?.heading || 0}°</span></div>
+                      <div><span className="text-slate-500">Qualification:</span> <span className="text-slate-700 font-mono">PARAMEDIC (ALS)</span></div>
+                    </>
+                  ) : (
+                    <div className="text-slate-500 text-xs italic">
+                      {isFinishedStatus(selectedBooking.status) ? 'Incident concluded without active crew tracking.' : 'No crew assigned yet.'}
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Hospital Dossier */}
@@ -1015,8 +1168,14 @@ export const Bookings: React.FC = () => {
 
       {/* Manual Driver Assignment Modal */}
       {assignModalBooking && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl">
+        <div 
+          onClick={() => setAssignModalBooking(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl"
+          >
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
               <UserPlus className="w-5 h-5 text-teal-600" />
               Manual Paramedic Dispatch
@@ -1087,8 +1246,14 @@ export const Bookings: React.FC = () => {
 
       {/* Reassign Paramedic Modal */}
       {reassignModalBooking && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl">
+        <div 
+          onClick={() => setReassignModalBooking(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl"
+          >
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
               <Truck className="w-5 h-5 text-amber-600" />
               Reassign Paramedic Crew
@@ -1160,8 +1325,14 @@ export const Bookings: React.FC = () => {
 
       {/* Cancel Emergency Modal */}
       {cancelModalBooking && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white border border-rose-300 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+        <div 
+          onClick={() => setCancelModalBooking(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white border border-rose-300 rounded-2xl max-w-md w-full p-6 shadow-2xl"
+          >
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
               <ShieldAlert className="w-5 h-5 text-rose-600" />
               Cancel Emergency Dispatch

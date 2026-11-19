@@ -68,9 +68,9 @@ export const UsersPage: React.FC = () => {
   const filteredUsers = users.filter(u => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      const matchName = u.name.toLowerCase().includes(term);
-      const matchPhone = u.phone.includes(term);
-      const matchEmail = u.email.toLowerCase().includes(term);
+      const matchName = (u.name || '').toLowerCase().includes(term);
+      const matchPhone = (u.phone || '').includes(term);
+      const matchEmail = (u.email || '').toLowerCase().includes(term);
       if (!matchName && !matchPhone && !matchEmail) return false;
     }
     return true;

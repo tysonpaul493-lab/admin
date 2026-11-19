@@ -99,8 +99,8 @@ export const Ambulances: React.FC = () => {
     if (typeFilter !== 'ALL' && a.vehicle_type !== typeFilter) return false;
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      const matchReg = a.registration_number.toLowerCase().includes(term);
-      const matchOp = a.operator_name.toLowerCase().includes(term);
+      const matchReg = (a.registration_number || '').toLowerCase().includes(term);
+      const matchOp = (a.operator_name || '').toLowerCase().includes(term);
       if (!matchReg && !matchOp) return false;
     }
     return true;

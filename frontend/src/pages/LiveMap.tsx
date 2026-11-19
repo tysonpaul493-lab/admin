@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
-import { 
-  Truck, Radio, Filter, RefreshCw, AlertTriangle, 
+import {
+  Truck, Radio, Filter, RefreshCw, AlertTriangle,
   MapPin, Building2, PhoneCall
 } from 'lucide-react';
 import { api } from '../api/client';
@@ -136,11 +136,10 @@ export const LiveMap: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setSimulating(!simulating)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition border shadow-xs ${
-              simulating
-                ? 'bg-teal-50 text-teal-700 border-teal-200'
-                : 'bg-slate-100 text-slate-600 border-slate-200 hover:text-slate-900'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition border shadow-xs ${simulating
+              ? 'bg-teal-50 text-teal-700 border-teal-200'
+              : 'bg-slate-100 text-slate-600 border-slate-200 hover:text-slate-900'
+              }`}
             title="Toggle Live GPS Telemetry Pulse"
           >
             <Radio className={`w-3.5 h-3.5 ${simulating ? 'animate-pulse text-teal-600' : ''}`} />
@@ -169,7 +168,7 @@ export const LiveMap: React.FC = () => {
               <p className="text-xs text-amber-700 mt-0.5">
                 The following ambulance has ceased transmitting GPS signals for &gt; 60 seconds:{' '}
                 <span className="font-mono font-bold text-slate-900">
-                  {staleVehicles.map(v => `${v.registration_number} (${Math.round((v.seconds_since_ping || 0)/60)}m ago)`).join(', ')}
+                  {staleVehicles.map(v => `${v.registration_number} (${Math.round((v.seconds_since_ping || 0) / 60)}m ago)`).join(', ')}
                 </span>
                 . Central dispatch protocol recommends calling crew immediately.
               </p>
@@ -264,6 +263,9 @@ export const LiveMap: React.FC = () => {
           />
 
           {filteredAmbulances.map((amb) => {
+            if (!amb.latitude || !amb.longitude || isNaN(amb.latitude) || isNaN(amb.longitude)) {
+              return null;
+            }
             const isStale = !!amb.is_gps_stale;
             const trip = amb.active_trip;
 
@@ -284,11 +286,10 @@ export const LiveMap: React.FC = () => {
                           <Truck className="w-4 h-4 text-teal-600" />
                           {amb.registration_number}
                         </span>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          amb.operational_status === 'AVAILABLE' ? 'bg-teal-50 text-teal-700 border border-teal-200' :
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${amb.operational_status === 'AVAILABLE' ? 'bg-teal-50 text-teal-700 border border-teal-200' :
                           amb.operational_status === 'BUSY' ? 'bg-red-50 text-red-700 border border-red-200' :
-                          'bg-amber-50 text-amber-700 border border-amber-200'
-                        }`}>
+                            'bg-amber-50 text-amber-700 border border-amber-200'
+                          }`}>
                           {amb.operational_status}
                         </span>
                       </div>
@@ -399,7 +400,7 @@ export const LiveMap: React.FC = () => {
               <div className="flex justify-between items-center">
                 <span className="text-slate-500">Direct Contact:</span>
                 {selectedAmbulance.primary_driver?.phone ? (
-                  <a 
+                  <a
                     href={`tel:${selectedAmbulance.primary_driver.phone}`}
                     className="font-mono text-teal-600 hover:underline flex items-center gap-1 font-semibold"
                   >

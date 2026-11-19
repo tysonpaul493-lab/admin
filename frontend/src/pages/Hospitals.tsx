@@ -79,8 +79,8 @@ export const Hospitals: React.FC = () => {
     if (zoneFilter !== 'ALL' && h.service_zone !== zoneFilter) return false;
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      const matchName = h.name.toLowerCase().includes(term);
-      const matchAddr = h.address.toLowerCase().includes(term);
+      const matchName = (h.name || '').toLowerCase().includes(term);
+      const matchAddr = (h.address || '').toLowerCase().includes(term);
       if (!matchName && !matchAddr) return false;
     }
     return true;

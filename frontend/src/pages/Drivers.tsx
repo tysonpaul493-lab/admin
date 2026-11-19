@@ -95,9 +95,9 @@ export const Drivers: React.FC = () => {
     if (onlineFilter !== 'ALL' && d.online_status !== onlineFilter) return false;
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      const matchName = d.full_name.toLowerCase().includes(term);
-      const matchPhone = d.phone.includes(term);
-      const matchLic = d.licence_number.toLowerCase().includes(term);
+      const matchName = (d.full_name || (d as any).name || '').toLowerCase().includes(term);
+      const matchPhone = (d.phone || '').includes(term);
+      const matchLic = (d.licence_number || '').toLowerCase().includes(term);
       if (!matchName && !matchPhone && !matchLic) return false;
     }
     return true;

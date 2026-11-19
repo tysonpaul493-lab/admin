@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Activity, LogOut, Map, CalendarClock, Users2, Building2, UserCheck, Volume2, VolumeX, Truck
+  Activity, LogOut, Map, CalendarClock, Users2, Building2, UserCheck, Volume2, VolumeX, Truck,
+  Radio, FileText, Bell, ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { liveSocket } from '../../api/liveSocket';
@@ -80,6 +81,22 @@ export const Navbar: React.FC = () => {
           <NavLink to="/hospitals" className={navItemClass} title="Trauma Centers">
             <Building2 className="w-3.5 h-3.5" />
             <span className="hidden md:inline">Hospitals</span>
+          </NavLink>
+          <NavLink to="/dispatch" className={navItemClass} title="Emergency Dispatch">
+            <Radio className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
+            <span className="hidden md:inline">Dispatch</span>
+          </NavLink>
+          <NavLink to="/reports" className={navItemClass} title="Reports & Revenue">
+            <FileText className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Reports</span>
+          </NavLink>
+          <NavLink to="/alerts" className={navItemClass} title="Operational Alerts">
+            <Bell className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Alerts</span>
+          </NavLink>
+          <NavLink to="/audit-logs" className={navItemClass} title="Security Audit Trail">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Audit</span>
           </NavLink>
         </nav>
 

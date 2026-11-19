@@ -15,8 +15,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('ambulance_admin_user');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('ambulance_admin_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      localStorage.removeItem('ambulance_admin_user');
+      return null;
+    }
   });
   const [isLoading, setIsLoading] = useState(false);
 

@@ -34,11 +34,38 @@ function getToken(): string | null {
   return localStorage.getItem('ambulance_admin_token');
 }
 
+async function fetchWithFallback(endpoint: string, options: RequestInit = {}): Promise<Response> {
+  const primaryUrl = `${API_BASE}${endpoint}`;
+  try {
+    const res = await fetch(primaryUrl, options);
+    if (res.ok || res.status === 401 || res.status === 422 || res.status === 403 || res.status === 400) {
+      return res;
+    }
+  } catch (err) {
+    // Primary relative request failed (e.g. proxy mismatch or network glitch)
+  }
+
+  // Direct Cloudflare Gateway fallback
+  if (API_BASE.startsWith('/') && DEFAULT_API_URL) {
+    try {
+      const fallbackUrl = `${DEFAULT_API_URL}${endpoint}`;
+      const res = await fetch(fallbackUrl, options);
+      if (res.ok || res.status === 401 || res.status === 422 || res.status === 403 || res.status === 400) {
+        return res;
+      }
+    } catch (e) {
+      // Both network endpoints failed
+    }
+  }
+
+  throw new Error('Network request failed');
+}
+
 export const api = {
   // Authentication
   async login(email: string, password: string, mfaCode?: string): Promise<{ success: boolean; token?: string; user?: User; mfa_required?: boolean; message?: string }> {
     try {
-      const res = await fetch(`${API_BASE}/auth/login`, {
+      const res = await fetchWithFallback('/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({ email, password, mfa_code: mfaCode })
@@ -108,7 +135,7 @@ export const api = {
     try {
       const token = getToken();
       if (token) {
-        await fetch(`${API_BASE}/auth/logout`, {
+        await fetchWithFallback('/auth/logout', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
         });
@@ -124,7 +151,7 @@ export const api = {
   async getDashboardStats(): Promise<DashboardStats> {
     try {
       const token = getToken();
-      const res = await fetch(`${API_BASE}/dashboard/stats`, {
+      const res = await fetchWithFallback('/dashboard/stats', {
         headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
       });
       if (res.ok) {
@@ -208,7 +235,7 @@ export const api = {
   async getLiveAmbulances(): Promise<Ambulance[]> {
     try {
       const token = getToken();
-      const res = await fetch(`${API_BASE}/tracking/live`, {
+      const res = await fetchWithFallback('/tracking/live', {
         headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
       });
       if (res.ok) {
@@ -257,7 +284,7 @@ export const api = {
   async getBookings(): Promise<Booking[]> {
     try {
       const token = getToken();
-      const res = await fetch(`${API_BASE}/bookings`, {
+      const res = await fetchWithFallback('/bookings', {
         headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
       });
       if (res.ok) {
@@ -271,7 +298,7 @@ export const api = {
   async assignDriver(bookingId: number, driverId: number, reason?: string): Promise<Booking> {
     try {
       const token = getToken();
-      const res = await fetch(`${API_BASE}/bookings/${bookingId}/assign-driver`, {
+      const res = await fetchWithFallback(`/bookings/${bookingId}/assign-driver`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -410,7 +437,7 @@ export const api = {
   async cancelBooking(bookingId: number, reason: string): Promise<Booking> {
     try {
       const token = getToken();
-      const res = await fetch(`${API_BASE}/bookings/${bookingId}/cancel-admin`, {
+      const res = await fetchWithFallback(`/bookings/${bookingId}/cancel-admin`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -506,7 +533,7 @@ export const api = {
   async getDrivers(): Promise<Driver[]> {
     try {
       const token = getToken();
-      const res = await fetch(`${API_BASE}/drivers`, {
+      const res = await fetchWithFallback('/drivers', {
         headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
       });
       if (res.ok) {
@@ -526,7 +553,7 @@ export const api = {
   async verifyDriver(driverId: number, action: 'APPROVE' | 'REJECT' | 'REQUEST_DOCUMENTS', reason?: string): Promise<Driver> {
     try {
       const token = getToken();
-      const res = await fetch(`${API_BASE}/drivers/${driverId}/verify`, {
+      const res = await fetchWithFallback(`/drivers/${driverId}/verify`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -588,7 +615,7 @@ export const api = {
   async toggleDriverSuspension(driverId: number, action: 'SUSPEND' | 'REACTIVATE', reason: string): Promise<Driver> {
     try {
       const token = getToken();
-      const res = await fetch(`${API_BASE}/drivers/${driverId}/toggle-suspension`, {
+      const res = await fetchWithFallback(`/drivers/${driverId}/toggle-suspension`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -646,7 +673,7 @@ export const api = {
   async getAmbulances(): Promise<Ambulance[]> {
     try {
       const token = getToken();
-      const res = await fetch(`${API_BASE}/ambulances`, {
+      const res = await fetchWithFallback('/ambulances', {
         headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
       });
       if (res.ok) {
@@ -711,7 +738,7 @@ export const api = {
   async getHospitals(): Promise<Hospital[]> {
     try {
       const token = getToken();
-      const res = await fetch(`${API_BASE}/hospitals`, {
+      const res = await fetchWithFallback('/hospitals', {
         headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
       });
       if (res.ok) {
@@ -732,7 +759,7 @@ export const api = {
   async getUsers(): Promise<any[]> {
     try {
       const token = getToken();
-      const res = await fetch(`${API_BASE}/users`, {
+      const res = await fetchWithFallback('/users', {
         headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
       });
       if (res.ok) {

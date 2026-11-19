@@ -3,13 +3,24 @@ import { Ambulance, Booking, Driver, Hospital, OperationalAlert, AuditLog, User 
 export const INITIAL_STAFF: User[] = [
   {
     id: 1,
+    name: 'Super Administrator',
+    email: 'admin@gmail.com',
+    role: 'super_admin',
+    role_name: 'Super Administrator',
+    badge_number: 'HQ-ADMIN-01',
+    phone: '+91 84283 04510',
+    mfa_enabled: false,
+    last_login_at: new Date().toISOString(),
+  },
+  {
+    id: 2,
     name: 'Commander Sarah Jenkins',
     email: 'admin@ambulance.gov',
     role: 'super_admin',
     role_name: 'Super Administrator',
     badge_number: 'CMD-108-01',
     phone: '+91 94441 23456',
-    mfa_enabled: true,
+    mfa_enabled: false,
     last_login_at: new Date().toISOString(),
   },
   {

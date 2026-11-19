@@ -254,7 +254,7 @@ export const LiveMap: React.FC = () => {
         <MapContainer
           center={[11.0168, 76.9658]}
           zoom={13}
-          scrollWheelZoom={true}
+          scrollWheelZoom={false}
           className="h-full w-full z-0"
         >
           <TileLayer

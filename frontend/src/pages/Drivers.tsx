@@ -198,7 +198,22 @@ export const Drivers: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {filteredDrivers.map((d) => (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-slate-400 font-medium text-xs">
+                    <RefreshCw className="w-5 h-5 mx-auto mb-2 text-teal-600 animate-spin" />
+                    Loading paramedics and driver records from database...
+                  </td>
+                </tr>
+              ) : filteredDrivers.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-slate-400 font-medium text-xs">
+                    <Users2 className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                    No paramedics found matching selected criteria.
+                  </td>
+                </tr>
+              ) : (
+                filteredDrivers.map((d) => (
                 <tr key={d.id} className="hover:bg-slate-50/80 transition">
                   {/* Driver Name & Photo */}
                   <td className="py-3 px-3 sm:px-4 whitespace-nowrap">
@@ -332,7 +347,7 @@ export const Drivers: React.FC = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>

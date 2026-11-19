@@ -520,7 +520,12 @@ export const Bookings: React.FC = () => {
 
       {/* Main Trips Cards Grid */}
       <div className="space-y-5 w-full">
-        {displayedBookings.length === 0 ? (
+        {isLoading ? (
+          <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-400 shadow-xs w-full">
+            <RefreshCw className="w-8 h-8 mx-auto mb-3 text-teal-600 animate-spin" />
+            <p className="text-sm font-semibold text-slate-700">Syncing emergency trip records from dispatch engine...</p>
+          </div>
+        ) : displayedBookings.length === 0 ? (
           <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-400 shadow-xs w-full">
             <CalendarClock className="w-12 h-12 mx-auto mb-3 text-slate-300" />
             <p className="text-sm font-semibold text-slate-700">No emergency trips found matching the selected filters.</p>

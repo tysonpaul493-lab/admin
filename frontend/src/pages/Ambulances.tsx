@@ -199,7 +199,22 @@ export const Ambulances: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {filteredAmbulances.map((amb) => {
+              {isLoading ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-slate-400 font-medium text-xs">
+                    <RefreshCw className="w-5 h-5 mx-auto mb-2 text-teal-600 animate-spin" />
+                    Fetching ambulance fleet records from database...
+                  </td>
+                </tr>
+              ) : filteredAmbulances.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-slate-400 font-medium text-xs">
+                    <Truck className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                    No ambulances found matching the selected filter.
+                  </td>
+                </tr>
+              ) : (
+                filteredAmbulances.map((amb) => {
                 const isFitnessExpired = new Date(amb.fitness_expiry) < new Date();
                 const isInsuranceExpiringSoon = new Date(amb.insurance_expiry) < new Date(Date.now() + 30 * 86400000);
 
@@ -226,7 +241,7 @@ export const Ambulances: React.FC = () => {
                     <td className="py-4 px-5">
                       {amb.primary_driver ? (
                         <div>
-                          <div className="font-semibold text-slate-900">{amb.primary_driver.name}</div>
+                          <div className="font-semibold text-slate-900">{amb.primary_driver.name || (amb.primary_driver as any).full_name}</div>
                           <div className="text-[10px] text-teal-700 font-mono font-bold">{amb.primary_driver.phone}</div>
                         </div>
                       ) : (
@@ -272,7 +287,7 @@ export const Ambulances: React.FC = () => {
                     </td>
                   </tr>
                 );
-              })}
+              }))}
             </tbody>
           </table>
         </div>

@@ -153,70 +153,82 @@ export const Hospitals: React.FC = () => {
       </div>
 
       {/* Hospital Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-        {filteredHospitals.map(h => (
-          <div
-            key={h.id}
-            className="bg-white border border-slate-200 hover:border-teal-400 rounded-2xl p-6 transition flex flex-col justify-between shadow-xs hover:shadow-md"
-          >
-            <div>
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200 uppercase tracking-wider font-semibold">
-                    {h.category}
-                  </span>
-                  <h2 className="text-base font-bold text-slate-900 mt-1.5 leading-snug">
-                    {h.name}
-                  </h2>
-                </div>
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1 shrink-0">
-                  <CheckCircle2 className="w-3 h-3" />
-                  <span>{h.verification_status}</span>
-                </span>
-              </div>
-
-              <div className="space-y-1.5 text-xs text-slate-600 my-3">
-                <div className="flex items-start gap-1.5 text-slate-600">
-                  <MapPin className="w-3.5 h-3.5 text-red-500 shrink-0 mt-0.5" />
-                  <span>{h.address} (Zone: {h.service_zone})</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-teal-700 font-mono font-semibold">
-                  <Phone className="w-3.5 h-3.5 shrink-0 text-teal-600" />
-                  <span>24/7 Triage Hotline: {h.emergency_contact}</span>
-                </div>
-                <div className="text-[11px] text-slate-400 font-mono">
-                  GPS: {h.latitude}, {h.longitude}
-                </div>
-              </div>
-
-              {/* Verified Emergency Services Badges */}
-              <div className="mt-3 pt-3 border-t border-slate-100">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 block mb-1.5 font-bold">
-                  Verified Emergency Capabilities:
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {h.verified_services.map((svc, i) => (
-                    <span
-                      key={i}
-                      className="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-slate-50 text-slate-700 border border-slate-200"
-                    >
-                      {svc.replace(/_/g, ' ')}
+      {isLoading ? (
+        <div className="py-16 text-center text-slate-400 font-medium text-xs bg-white border border-slate-200 rounded-2xl">
+          <RefreshCw className="w-5 h-5 mx-auto mb-2 text-teal-600 animate-spin" />
+          Loading accredited trauma centers from database...
+        </div>
+      ) : filteredHospitals.length === 0 ? (
+        <div className="py-16 text-center text-slate-400 font-medium text-xs bg-white border border-slate-200 rounded-2xl">
+          <Building2 className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+          No trauma centers found matching search filters.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+          {filteredHospitals.map(h => (
+            <div
+              key={h.id}
+              className="bg-white border border-slate-200 hover:border-teal-400 rounded-2xl p-6 transition flex flex-col justify-between shadow-xs hover:shadow-md"
+            >
+              <div>
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200 uppercase tracking-wider font-semibold">
+                      {h.category}
                     </span>
-                  ))}
+                    <h2 className="text-base font-bold text-slate-900 mt-1.5 leading-snug">
+                      {h.name}
+                    </h2>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1 shrink-0">
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>{h.verification_status}</span>
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 text-xs text-slate-600 my-3">
+                  <div className="flex items-start gap-1.5 text-slate-600">
+                    <MapPin className="w-3.5 h-3.5 text-red-500 shrink-0 mt-0.5" />
+                    <span>{h.address} (Zone: {h.service_zone})</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-teal-700 font-mono font-semibold">
+                    <Phone className="w-3.5 h-3.5 shrink-0 text-teal-600" />
+                    <span>24/7 Triage Hotline: {h.emergency_contact}</span>
+                  </div>
+                  <div className="text-[11px] text-slate-400 font-mono">
+                    GPS: {h.latitude}, {h.longitude}
+                  </div>
+                </div>
+
+                {/* Verified Emergency Services Badges */}
+                <div className="mt-3 pt-3 border-t border-slate-100">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 block mb-1.5 font-bold">
+                    Verified Emergency Capabilities:
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(Array.isArray(h.verified_services) ? h.verified_services : typeof h.verified_services === 'string' ? (h.verified_services as string).split(',') : []).map((svc, i) => (
+                      <span
+                        key={i}
+                        className="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-slate-50 text-slate-700 border border-slate-200"
+                      >
+                        {String(svc).replace(/_/g, ' ').trim()}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-mono">
-              <span className="flex items-center gap-1 text-slate-600 font-medium">
-                <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />
-                <span>Verified Facility Data</span>
-              </span>
-              <span>API Gateway: Active</span>
+              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                <span className="flex items-center gap-1 text-slate-600 font-medium">
+                  <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />
+                  <span>Verified Facility Data</span>
+                </span>
+                <span>API Gateway: Active</span>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Add Hospital Modal */}
       {showAddModal && (

@@ -1,8 +1,8 @@
 {
-  "name": "liferoute-admin-portal",
+  "name": "a2i-admin-portal",
   "version": "1.0.0",
   "private": true,
-  "description": "LifeRoute Emergency Ambulance Control Center & Admin Portal",
+  "description": "A2I Emergency Ambulance Control Center & Admin Portal",
   "workspaces": [
     "frontend"
   ],

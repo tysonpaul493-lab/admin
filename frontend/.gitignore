@@ -1,0 +1,6 @@
+# Prevent node_modules permanently
+node_modules/
+**/node_modules/
+node_modules
+*.npm/
+.npm/

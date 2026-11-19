@@ -35,18 +35,18 @@ export const Navbar: React.FC = () => {
   return (
     <header className="bg-white/95 border-b border-slate-200 text-slate-900 sticky top-0 z-[1100] backdrop-blur-md shadow-xs w-full max-w-full overflow-hidden">
       <div className="w-full max-w-full px-3 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-2 sm:gap-3 overflow-hidden">
-        {/* Left: Hospital Management Brand & Live Gateway */}
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 min-w-0">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-600 shadow-xs shrink-0">
-            <Activity className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse text-teal-600" />
+        {/* Left: Trust Brand & Live Command Center */}
+        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 min-w-0">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white border border-teal-200 shadow-xs shrink-0 overflow-hidden flex items-center justify-center">
+            <img src="/app_logo.png" alt="Trust Logo" className="w-full h-full object-cover" />
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <span className="font-extrabold tracking-tight text-sm sm:text-base lg:text-lg text-slate-900 whitespace-nowrap">
-                LIFE ROUTE
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold tracking-tight text-xs sm:text-sm lg:text-base text-slate-900 whitespace-nowrap">
+                தமிழ் அனைத்து அறக்கட்டளை
               </span>
-              <span className="hidden sm:inline-block text-[9px] sm:text-[10px] font-mono px-1.5 sm:px-2 py-0.5 rounded-md bg-teal-50 text-teal-700 border border-teal-200 uppercase tracking-wider font-bold whitespace-nowrap">
-                HOSPITAL COMMAND
+              <span className="hidden sm:inline-block text-[9px] sm:text-[10px] font-mono px-2 py-0.5 rounded-md bg-teal-50 text-teal-700 border border-teal-200 uppercase tracking-wider font-bold whitespace-nowrap">
+                COMMAND CENTER
               </span>
             </div>
           </div>

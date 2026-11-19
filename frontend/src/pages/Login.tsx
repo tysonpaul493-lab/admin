@@ -46,17 +46,17 @@ export const Login: React.FC = () => {
       <div className="max-w-md w-full relative z-10">
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-teal-50 border border-teal-200 text-teal-600 shadow-sm mb-3">
-            <Activity className="w-8 h-8 animate-pulse text-teal-600" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white border border-slate-200 shadow-md mb-3 overflow-hidden">
+            <img src="/app_logo.png" alt="Trust Logo" className="w-full h-full object-cover" />
           </div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-            Life Route Hospital Management
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+            ஆல் இந்தியா தமிழ் அனைத்து அறக்கட்டளை
           </h1>
           <p className="text-xs uppercase font-mono tracking-widest text-teal-700 mt-1 font-bold">
-            Central Administrative Command Center
+            தமிழ்நாடு அவசர ஊர்தி கட்டுப்பாட்டு மையம்
           </p>
           <div className="inline-block mt-2 px-3 py-1 rounded-full bg-white border border-slate-200 text-[11px] text-slate-500 font-medium shadow-xs">
-            Restricted Access • Authorized Hospital Personnel Only
+            Restricted Access • Authorized Dispatch Personnel Only
           </div>
         </div>
 

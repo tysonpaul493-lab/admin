@@ -27,9 +27,10 @@ export const Sidebar: React.FC = () => {
 
   return (
     <aside className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 min-h-screen">
-      <div className="px-4 py-3 border-b border-slate-200">
-        <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 font-bold">
-          Emergency Command
+      <div className="px-4 py-3.5 border-b border-slate-200 flex items-center gap-2.5">
+        <img src="/app_logo.png" alt="Logo" className="w-7 h-7 rounded-full object-cover border border-teal-200 shadow-2xs shrink-0" />
+        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700">
+          அவசர கட்டுப்பாட்டு மையம்
         </span>
       </div>
       <nav className="p-3 space-y-1">

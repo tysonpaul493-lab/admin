@@ -36,10 +36,14 @@ export const Dispatch: React.FC = () => {
     const unsub = liveSocket.onBookingUpdate(() => {
       loadData();
     });
-    const interval = setInterval(loadData, 6000);
+    const unsubEvent = liveSocket.onEvent(() => {
+      loadData();
+    });
+    const interval = setInterval(loadData, 4000);
     return () => {
       clearInterval(interval);
       unsub();
+      unsubEvent();
     };
   }, []);
 

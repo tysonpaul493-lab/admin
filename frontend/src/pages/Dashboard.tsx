@@ -29,13 +29,17 @@ export const Dashboard: React.FC = () => {
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 10000);
+    const interval = setInterval(loadData, 4000);
     const unsub = liveSocket.onBookingUpdate(() => {
+      loadData();
+    });
+    const unsubEvent = liveSocket.onEvent(() => {
       loadData();
     });
     return () => {
       clearInterval(interval);
       unsub();
+      unsubEvent();
     };
   }, []);
 
@@ -131,8 +135,8 @@ export const Dashboard: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 p-6 rounded-2xl shadow-xs w-full">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
-              Hospital Emergency Command Center
+            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
+              அவசர கட்டுப்பாட்டு மையம்
             </h1>
             <span className="text-xs font-semibold font-mono px-3 py-1 rounded-full bg-teal-50 text-teal-700 border border-teal-200 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-teal-600 animate-ping"></span>

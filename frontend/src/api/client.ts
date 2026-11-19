@@ -15,20 +15,17 @@ let memoryAlerts = [...INITIAL_ALERTS];
 let memoryAuditLogs = [...INITIAL_AUDIT_LOGS];
 let memoryStaff = [...INITIAL_STAFF];
 
-const DEFAULT_API_URL = 'https://posts-duration-leisure-notebook.trycloudflare.com/api/v1';
-
 export const getApiBase = (): string => {
   if (typeof window !== 'undefined') {
+    if ((import.meta as any).env?.VITE_API_URL) {
+      return (import.meta as any).env.VITE_API_URL;
+    }
     if (window.location.protocol === 'file:') {
-      return (import.meta as any).env?.VITE_API_URL || DEFAULT_API_URL;
+      return 'http://127.0.0.1:8000/api/v1';
     }
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return '/api/v1';
-    }
-    // On Vercel or cloud web hosting, use the active tunnel or relative proxy
-    return (import.meta as any).env?.VITE_API_URL || '/api/v1';
+    return '/api/v1';
   }
-  return (import.meta as any).env?.VITE_API_URL || DEFAULT_API_URL;
+  return 'http://127.0.0.1:8000/api/v1';
 };
 
 const API_BASE = getApiBase();
@@ -38,30 +35,35 @@ function getToken(): string | null {
 }
 
 async function fetchWithFallback(endpoint: string, options: RequestInit = {}): Promise<Response> {
-  const primaryUrl = `${API_BASE}${endpoint}`;
-  try {
-    const res = await fetch(primaryUrl, options);
-    if (res.ok || res.status === 401 || res.status === 422 || res.status === 403 || res.status === 400) {
-      return res;
-    }
-  } catch (err) {
-    // Primary relative request failed (e.g. proxy mismatch or network glitch)
+  // Candidate endpoints in priority order
+  const targets = [
+    `${API_BASE}${endpoint}`,
+    `http://127.0.0.1:8000/api/v1${endpoint}`,
+    `http://localhost:8000/api/v1${endpoint}`,
+  ];
+
+  if (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    targets.push(`http://${window.location.hostname}:8000/api/v1${endpoint}`);
   }
 
-  // Direct Cloudflare Gateway fallback
-  if (API_BASE.startsWith('/') && DEFAULT_API_URL) {
+  for (const targetUrl of targets) {
     try {
-      const fallbackUrl = `${DEFAULT_API_URL}${endpoint}`;
-      const res = await fetch(fallbackUrl, options);
-      if (res.ok || res.status === 401 || res.status === 422 || res.status === 403 || res.status === 400) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 4000);
+      const res = await fetch(targetUrl, {
+        ...options,
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (res.ok || res.status === 401 || res.status === 422 || res.status === 403 || res.status === 400 || res.status === 404) {
         return res;
       }
-    } catch (e) {
-      // Both network endpoints failed
+    } catch (_) {
+      // Try next candidate target
     }
   }
 
-  throw new Error('Network request failed');
+  throw new Error('All dispatch backend connection candidates were unreachable.');
 }
 
 export const api = {

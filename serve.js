@@ -6,7 +6,6 @@ const url = require('url');
 
 const PORT = process.env.PORT || 3001;
 const LOCAL_API_TARGET = 'http://127.0.0.1:8000';
-const FALLBACK_API_TARGET = 'https://posts-duration-leisure-notebook.trycloudflare.com';
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -48,15 +47,9 @@ function proxyRequest(req, res, targetBase) {
   );
 
   proxyReq.on('error', (err) => {
-    // If local target failed, try fallback
-    if (targetBase === LOCAL_API_TARGET) {
-      console.warn(`[Proxy] Local API on 8000 unreachable, forwarding to Cloudflare tunnel: ${FALLBACK_API_TARGET}`);
-      proxyRequest(req, res, FALLBACK_API_TARGET);
-    } else {
-      console.error('[Proxy Error]', err.message);
-      res.writeHead(502, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: false, message: 'API Gateway Unavailable', error: err.message }));
-    }
+    console.error('[Proxy Error]', err.message);
+    res.writeHead(502, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: false, message: 'API Gateway Unavailable', error: err.message }));
   });
 
   req.pipe(proxyReq);
@@ -139,7 +132,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚑 Life Route Emergency Admin Hospital Command Center`);
   console.log(`======================================================`);
   console.log(`✅ Web Portal: http://localhost:${PORT}`);
-  console.log(`🔗 API Proxy:  ${LOCAL_API_TARGET} (Fallback: ${FALLBACK_API_TARGET})`);
+  console.log(`🔗 API Proxy:  ${LOCAL_API_TARGET}`);
   console.log(`📦 Status:     Zero node_modules required!`);
   console.log(`======================================================\n`);
 });

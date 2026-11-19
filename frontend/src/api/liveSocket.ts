@@ -55,12 +55,14 @@ class LiveSocketService {
     }
 
     try {
-      let wsUrl = 'ws://127.0.0.1:8080';
+      let wsHost = '127.0.0.1';
       if (typeof window !== 'undefined') {
-        if (window.location.protocol === 'https:' || (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1')) {
-          wsUrl = 'wss://reynolds-geo-nature-restaurants.trycloudflare.com';
+        const h = window.location.hostname;
+        if (h && h !== 'localhost' && h !== '127.0.0.1' && !h.includes('vercel.app')) {
+          wsHost = h;
         }
       }
+      const wsUrl = `ws://${wsHost}:8080`;
       console.log(`🔌 [Admin LiveSocket] Connecting to ${wsUrl}...`);
 
       this.socket = new WebSocket(wsUrl);

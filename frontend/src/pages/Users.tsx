@@ -20,62 +20,30 @@ interface PublicUser {
 export const UsersPage: React.FC = () => {
   const { hasRole } = useAuth();
   const [loading, setLoading] = useState(true);
-
-  const [users, setUsers] = useState<PublicUser[]>([
-    {
-      id: 1,
-      name: 'Tyson',
-      phone: '+91 8428304510',
-      email: 'tyson@emergency.org',
-      is_verified: true,
-      is_active: true,
-      total_bookings: 8,
-      registered_at: '2026-11-13',
-      has_active_emergency: true,
-    },
-    {
-      id: 101,
-      name: 'Suresh Ramanathan',
-      phone: '+91 94441 23456',
-      email: 'suresh.ramanathan@gmail.com',
-      is_verified: true,
-      is_active: true,
-      total_bookings: 3,
-      registered_at: '2025-06-12',
-      has_active_emergency: false,
-    },
-    {
-      id: 102,
-      name: 'Meera Chidambaram',
-      phone: '+91 98400 98765',
-      email: 'meera.c@yahoo.com',
-      is_verified: true,
-      is_active: true,
-      total_bookings: 1,
-      registered_at: '2026-01-20',
-      has_active_emergency: false,
-    },
-  ]);
+  const [users, setUsers] = useState<PublicUser[]>([]);
 
   const loadUsers = async () => {
     try {
       setLoading(true);
       const data = await api.getUsers();
-      if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         setUsers(data.map((u: any) => ({
           id: u.id,
           name: u.name || 'Emergency Caller',
-          phone: u.phone || '+91 8428304510',
-          email: u.email || `user_${u.id}@emergency.org`,
+          phone: u.phone || '—',
+          email: u.email || (u.id ? `user_${u.id}@emergency.org` : '—'),
           is_verified: true,
           is_active: u.status !== 'SUSPENDED',
-          total_bookings: u.bookings_count || 1,
-          registered_at: u.created_at ? u.created_at.split('T')[0] : '2026-11-13',
-          has_active_emergency: false,
+          total_bookings: u.bookings_count || 0,
+          registered_at: u.created_at ? u.created_at.split('T')[0] : '—',
+          has_active_emergency: Boolean(u.has_active_emergency),
         })));
+      } else {
+        setUsers([]);
       }
     } catch (err) {
-      console.warn('Using local store for users');
+      console.warn('Failed to load registered users from API:', err);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -165,7 +133,22 @@ export const UsersPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {filteredUsers.map(u => (
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-slate-400 font-medium text-xs">
+                    <RefreshCw className="w-5 h-5 mx-auto mb-2 text-teal-600 animate-spin" />
+                    Fetching verified citizen registry from server...
+                  </td>
+                </tr>
+              ) : filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-slate-400 font-medium text-xs">
+                    <ShieldCheck className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                    No registered citizens found in live database.
+                  </td>
+                </tr>
+              ) : (
+                filteredUsers.map(u => (
                 <tr key={u.id} className="hover:bg-slate-50/80 transition">
                   <td className="py-3.5 px-3 sm:px-4 whitespace-nowrap">
                     <div className="font-bold text-slate-900 text-xs">{u.name}</div>
@@ -237,7 +220,7 @@ export const UsersPage: React.FC = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>

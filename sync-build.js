@@ -1,6 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 
+function emptyDirSync(dir) {
+  if (fs.existsSync(dir)) {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+  fs.mkdirSync(dir, { recursive: true });
+}
+
 function copyFolderRecursiveSync(source, target) {
   if (!fs.existsSync(source)) return;
   if (!fs.existsSync(target)) {
@@ -24,6 +31,8 @@ const rootDist = path.join(__dirname, 'dist');
 const rootPublic = path.join(__dirname, 'public');
 
 if (fs.existsSync(sourceDist)) {
+  emptyDirSync(rootDist);
+  emptyDirSync(rootPublic);
   copyFolderRecursiveSync(sourceDist, rootDist);
   copyFolderRecursiveSync(sourceDist, rootPublic);
   
@@ -34,9 +43,10 @@ if (fs.existsSync(sourceDist)) {
   }
   const assetsFolder = path.join(sourceDist, 'assets');
   if (fs.existsSync(assetsFolder)) {
+    emptyDirSync(path.join(__dirname, 'assets'));
     copyFolderRecursiveSync(assetsFolder, path.join(__dirname, 'assets'));
   }
-  console.log('Successfully synced build artifacts to dist, public, and root!');
+  console.log('Successfully synced clean build artifacts to dist, public, and root!');
 } else {
   console.warn('Source dist does not exist:', sourceDist);
 }

@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://activated-concepts-busy-syndication.trycloudflare.com/api/$1"
+      "destination": "https://jessica-western-mysterious-twiki.trycloudflare.com/api/$1"
     },
     {
       "source": "/((?!assets/|.*\\..*).*)",

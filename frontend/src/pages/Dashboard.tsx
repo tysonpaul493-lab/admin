@@ -298,13 +298,17 @@ export const Dashboard: React.FC = () => {
                   </td>
                   <td className="py-4 px-4">
                     <div className="font-semibold text-slate-800">{b.patient_name || b.requester_name}</div>
-                    <a 
-                      href={`tel:${b.requester_phone || b.patient_phone}`}
-                      className="text-[11px] text-teal-600 hover:underline font-mono flex items-center gap-1 mt-0.5 font-medium"
-                    >
-                      <PhoneCall className="w-3 h-3" />
-                      {b.requester_phone || b.patient_phone}
-                    </a>
+                    {(b.requester_phone || b.patient_phone) && b.requester_phone !== '—' && b.patient_phone !== '—' ? (
+                      <a 
+                        href={`tel:${b.requester_phone || b.patient_phone}`}
+                        className="text-[11px] text-teal-600 hover:underline font-mono flex items-center gap-1 mt-0.5 font-medium"
+                      >
+                        <PhoneCall className="w-3 h-3" />
+                        {b.requester_phone || b.patient_phone}
+                      </a>
+                    ) : (
+                      <span className="text-[10px] text-slate-400 font-mono">—</span>
+                    )}
                   </td>
                   <td className="py-4 px-4 text-slate-700 max-w-xs truncate">
                     <span className="flex items-center gap-1.5">

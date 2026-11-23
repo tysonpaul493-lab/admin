@@ -717,13 +717,19 @@ export const Bookings: React.FC = () => {
                         <User className="w-4 h-4 text-teal-600" />
                         Citizen Caller & Patient Dossier
                       </span>
-                      <a 
-                        href={`tel:${b.requester_phone}`} 
-                        className="flex items-center gap-1 text-[11px] font-mono text-teal-700 hover:underline bg-teal-50 px-2.5 py-1 rounded-lg border border-teal-200 font-bold"
-                      >
-                        <PhoneCall className="w-3 h-3 text-teal-600" />
-                        <span>{b.requester_phone}</span>
-                      </a>
+                      {b.requester_phone && b.requester_phone !== '—' ? (
+                        <a 
+                          href={`tel:${b.requester_phone}`} 
+                          className="flex items-center gap-1 text-[11px] font-mono text-teal-700 hover:underline bg-teal-50 px-2.5 py-1 rounded-lg border border-teal-200 font-bold"
+                        >
+                          <PhoneCall className="w-3 h-3 text-teal-600" />
+                          <span>{b.requester_phone}</span>
+                        </a>
+                      ) : (
+                        <span className="text-[10px] font-mono text-slate-500 font-bold bg-slate-100 px-2.5 py-1 rounded border border-slate-200">
+                          PHONE UNLISTED
+                        </span>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 text-xs">

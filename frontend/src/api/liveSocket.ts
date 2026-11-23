@@ -195,7 +195,7 @@ class LiveSocketService {
     // 2. New Emergency Booking Placed by User
     else if (eventName === 'BookingCreated' || eventName === 'NewEmergencyBooking' || eventName.includes('Created')) {
       const patientName = payload.patient_name || payload.name || 'Emergency Patient';
-      const patientPhone = payload.callback_phone || payload.patient_phone || payload.phone || '+91 8428304510';
+      const patientPhone = payload.callback_phone || payload.patient_phone || payload.phone || '';
       const ref = payload.booking_reference || `#BK-${payload.id || payload.booking_id || ''}`;
       const pickup = payload.pickup_address || 'Patient Current GPS Location';
 

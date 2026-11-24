@@ -47,7 +47,7 @@ const hospitalIcon = L.divIcon({
 export const LiveMap: React.FC = () => {
   const [ambulances, setAmbulances] = useState<Ambulance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [simulating, setSimulating] = useState(true);
+  const [livePolling, setLivePolling] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [typeFilter, setTypeFilter] = useState<string>('ALL');
   const [zoneFilter, setZoneFilter] = useState<string>('ALL');
@@ -92,10 +92,9 @@ export const LiveMap: React.FC = () => {
     });
 
     const interval = setInterval(() => {
-      if (simulating) {
-        api.simulateGpsPulse();
+      if (livePolling) {
+        fetchAmbulances();
       }
-      fetchAmbulances();
     }, 4000);
 
     return () => {
@@ -103,7 +102,7 @@ export const LiveMap: React.FC = () => {
       unsubLocation();
       unsubBooking();
     };
-  }, [simulating]);
+  }, [livePolling]);
 
   const filteredAmbulances = ambulances.filter(a => {
     if (statusFilter !== 'ALL' && a.operational_status !== statusFilter) return false;
@@ -135,15 +134,15 @@ export const LiveMap: React.FC = () => {
 
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setSimulating(!simulating)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition border shadow-xs ${simulating
+            onClick={() => setLivePolling(!livePolling)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition border shadow-xs ${livePolling
               ? 'bg-teal-50 text-teal-700 border-teal-200'
               : 'bg-slate-100 text-slate-600 border-slate-200 hover:text-slate-900'
               }`}
-            title="Toggle Live GPS Telemetry Pulse"
+            title="Toggle Live GPS Telemetry Polling"
           >
-            <Radio className={`w-3.5 h-3.5 ${simulating ? 'animate-pulse text-teal-600' : ''}`} />
-            <span>{simulating ? 'GPS Pulse: Active' : 'GPS Pulse: Standby'}</span>
+            <Radio className={`w-3.5 h-3.5 ${livePolling ? 'animate-pulse text-teal-600' : ''}`} />
+            <span>{livePolling ? 'Live Telemetry: Active' : 'Live Telemetry: Standby'}</span>
           </button>
 
           <button

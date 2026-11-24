@@ -175,8 +175,6 @@ export const api = {
     return [];
   },
 
-  // No-op for simulated GPS drift: Real hardware device GPS from drivers is strictly preserved
-  simulateGpsPulse() {},
 
   // Bookings
   async getBookings(): Promise<Booking[]> {

@@ -46,16 +46,16 @@ export const Login: React.FC = () => {
       <div className="max-w-md w-full relative z-10">
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white border border-slate-200 shadow-md mb-3 overflow-hidden">
-            <img src="/app_logo.png" alt="Trust Logo" className="w-full h-full object-cover" />
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-white border-2 border-slate-200 shadow-md mb-3 overflow-hidden">
+            <img src="/app_logo.png" alt="All India Tamil Annai Trust Logo" className="w-full h-full object-cover" />
           </div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-            ஆல் இந்தியா தமிழ் அனைத்து அறக்கட்டளை
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
+            ஆல் இந்தியா தமிழ் அன்னை அறக்கட்டளை
           </h1>
-          <p className="text-xs uppercase font-mono tracking-widest text-teal-700 mt-1 font-bold">
-            தமிழ்நாடு அவசர ஊர்தி கட்டுப்பாட்டு மையம்
+          <p className="text-xs sm:text-sm font-bold text-sky-600 mt-1 tracking-wide">
+            தமிழ்நாடு அவசர ஊர்தி ஓட்டுநர் கன்சோல்
           </p>
-          <div className="inline-block mt-2 px-3 py-1 rounded-full bg-white border border-slate-200 text-[11px] text-slate-500 font-medium shadow-xs">
+          <div className="inline-block mt-2.5 px-3 py-1 rounded-full bg-white border border-slate-200 text-[11px] text-slate-500 font-medium shadow-xs">
             Restricted Access • Authorized Dispatch Personnel Only
           </div>
         </div>

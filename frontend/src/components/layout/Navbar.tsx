@@ -43,11 +43,14 @@ export const Navbar: React.FC = () => {
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="font-extrabold tracking-tight text-xs sm:text-sm lg:text-base text-slate-900 whitespace-nowrap">
-                தமிழ் அனைத்து அறக்கட்டளை
+                ஆல் இந்தியா தமிழ் அன்னை அறக்கட்டளை
               </span>
               <span className="hidden sm:inline-block text-[9px] sm:text-[10px] font-mono px-2 py-0.5 rounded-md bg-teal-50 text-teal-700 border border-teal-200 uppercase tracking-wider font-bold whitespace-nowrap">
                 COMMAND CENTER
               </span>
+            </div>
+            <div className="text-[10px] font-bold text-sky-600 truncate hidden md:block">
+              தமிழ்நாடு அவசர ஊர்தி ஓட்டுநர் கன்சோல்
             </div>
           </div>
         </div>

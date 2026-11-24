@@ -28,10 +28,15 @@ export const Sidebar: React.FC = () => {
   return (
     <aside className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 min-h-screen">
       <div className="px-4 py-3.5 border-b border-slate-200 flex items-center gap-2.5">
-        <img src="/app_logo.png" alt="Logo" className="w-7 h-7 rounded-full object-cover border border-teal-200 shadow-2xs shrink-0" />
-        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700">
-          அவசர கட்டுப்பாட்டு மையம்
-        </span>
+        <img src="/app_logo.png" alt="Logo" className="w-8 h-8 rounded-full object-cover border border-slate-200 shadow-2xs shrink-0" />
+        <div className="min-w-0">
+          <div className="text-[11px] font-bold text-slate-800 truncate">
+            ஆல் இந்தியா தமிழ் அன்னை அறக்கட்டளை
+          </div>
+          <div className="text-[9px] font-bold text-sky-600 truncate">
+            தமிழ்நாடு அவசர ஊர்தி ஓட்டுநர் கன்சோல்
+          </div>
+        </div>
       </div>
       <nav className="p-3 space-y-1">
         {navigation.map((item) => (

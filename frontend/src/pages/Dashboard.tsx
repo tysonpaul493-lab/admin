@@ -133,27 +133,35 @@ export const Dashboard: React.FC = () => {
     <div className="space-y-6 w-full">
       {/* Top Bar: Title & Telemetry Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 p-6 rounded-2xl shadow-xs w-full">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
-              அவசர கட்டுப்பாட்டு மையம்
-            </h1>
-            <span className="text-xs font-semibold font-mono px-3 py-1 rounded-full bg-teal-50 text-teal-700 border border-teal-200 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-teal-600 animate-ping"></span>
-              Live Telemetry
-            </span>
-            <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-              {m.online_drivers?.value ?? 0} Drivers Online
-            </span>
-            {(m.offline_drivers?.value || 0) > 0 && (
-              <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                {m.offline_drivers?.value} Offline
-              </span>
-            )}
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white border-2 border-slate-200 shadow-md shrink-0 overflow-hidden flex items-center justify-center">
+            <img src="/app_logo.png" alt="All India Tamil Annai Trust Logo" className="w-full h-full object-cover" />
           </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Real-time ambulance dispatch status, citizen emergency intake, paramedic telemetry, and hospital trauma records.
-          </p>
+          <div>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
+                ஆல் இந்தியா தமிழ் அன்னை அறக்கட்டளை
+              </h1>
+              <span className="text-xs font-semibold font-mono px-3 py-1 rounded-full bg-teal-50 text-teal-700 border border-teal-200 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-teal-600 animate-ping"></span>
+                Live Telemetry
+              </span>
+              <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                {m.online_drivers?.value ?? 0} Drivers Online
+              </span>
+              {(m.offline_drivers?.value || 0) > 0 && (
+                <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                  {m.offline_drivers?.value} Offline
+                </span>
+              )}
+            </div>
+            <p className="text-xs sm:text-sm font-bold text-sky-600 mt-0.5 tracking-wide">
+              தமிழ்நாடு அவசர ஊர்தி ஓட்டுநர் கன்சோல்
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              Real-time ambulance dispatch status, citizen emergency intake, paramedic telemetry, and hospital trauma records.
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">

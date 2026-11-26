@@ -1,3 +1,5 @@
+import { getApiBase } from './client';
+
 /**
  * Live WebSocket Connection Service for LifeRoute Admin Command Center
  * Intercepts real-time events between User App and Driver Paramedic App
@@ -31,6 +33,7 @@ class LiveSocketService {
   private isConnected = false;
   private reconnectTimer: any = null;
   private pingTimer: any = null;
+  private socketId: string | null = null;
   private recentEvents: LiveTelemetryEvent[] = [];
   
   private listeners: {
@@ -49,20 +52,38 @@ class LiveSocketService {
     this.connect();
   }
 
+  private getWsUrl(): string {
+    if ((import.meta as any).env?.VITE_WS_URL) {
+      return (import.meta as any).env.VITE_WS_URL;
+    }
+    if (typeof window !== 'undefined') {
+      if (window.location.protocol === 'https:') {
+        return `wss://${window.location.host}/app/liferoute_reverb_key`;
+      }
+      const h = window.location.hostname;
+      const wsHost = h && h !== 'localhost' && h !== '127.0.0.1' ? h : '127.0.0.1';
+      return `ws://${wsHost}:8080/app/liferoute_reverb_key`;
+    }
+    return 'ws://127.0.0.1:8080/app/liferoute_reverb_key';
+  }
+
+  public reconnect(): void {
+    try {
+      this.socket?.close();
+    } catch (_) {}
+    this.socket = null;
+    this.socketId = null;
+    this.isConnected = false;
+    this.connect();
+  }
+
   public connect(): void {
     if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) {
       return;
     }
 
     try {
-      let wsHost = '127.0.0.1';
-      if (typeof window !== 'undefined') {
-        const h = window.location.hostname;
-        if (h && h !== 'localhost' && h !== '127.0.0.1' && !h.includes('vercel.app')) {
-          wsHost = h;
-        }
-      }
-      const wsUrl = `ws://${wsHost}:8080`;
+      const wsUrl = this.getWsUrl();
       console.log(`🔌 [Admin LiveSocket] Connecting to ${wsUrl}...`);
 
       this.socket = new WebSocket(wsUrl);
@@ -72,17 +93,8 @@ class LiveSocketService {
         this.isConnected = true;
         this.notifyStatus(true);
 
-        // Subscribe to all relevant channels
-        const channels = [
-          'emergency-broadcasts',
-          'private-bookings',
-          'private-booking',
-          'private-driver'
-        ];
-
-        channels.forEach(ch => {
-          this.sendPusher('pusher:subscribe', { channel: ch });
-        });
+        // Subscribe to public dispatch broadcast channel immediately
+        this.sendPusher('pusher:subscribe', { channel: 'emergency-broadcasts' });
 
         // Keep-alive heartbeat
         if (this.pingTimer) clearInterval(this.pingTimer);
@@ -132,6 +144,37 @@ class LiveSocketService {
     }
   }
 
+  private async subscribePrivateChannels(socketId: string): Promise<void> {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('ambulance_admin_token') : null;
+    if (!token || !socketId) return;
+
+    const privateChannels = ['private-bookings', 'private-booking', 'private-driver'];
+    const authUrl = `${getApiBase()}/broadcasting/auth`;
+    for (const ch of privateChannels) {
+      try {
+        const res = await fetch(authUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ channel_name: ch, socket_id: socketId }),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.auth) {
+            this.sendPusher('pusher:subscribe', {
+              channel: ch,
+              auth: json.auth,
+              ...(json.channel_data ? { channel_data: json.channel_data } : {}),
+            });
+          }
+        }
+      } catch (_) {}
+    }
+  }
+
   private handleIncoming(msg: any): void {
     const eventName = msg.event || '';
     let payload = msg.data;
@@ -142,6 +185,12 @@ class LiveSocketService {
     }
     if (!payload && typeof msg === 'object') {
       payload = msg;
+    }
+
+    if (eventName === 'pusher:connection_established' && payload?.socket_id) {
+      this.socketId = String(payload.socket_id);
+      this.subscribePrivateChannels(this.socketId);
+      return;
     }
 
     const now = new Date();

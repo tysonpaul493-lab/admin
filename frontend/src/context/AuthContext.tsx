@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '../types';
 import { api } from '../api/client';
+import { liveSocket } from '../api/liveSocket';
 
 interface AuthContextType {
   user: User | null;
@@ -25,6 +26,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    const onExpired = () => {
+      setUser(null);
+    };
+    window.addEventListener('admin-auth-expired', onExpired);
+    return () => window.removeEventListener('admin-auth-expired', onExpired);
+  }, []);
+
   const hasRole = (roles?: string[]) => {
     if (!roles || roles.length === 0) return true;
     if (!user) return false;
@@ -37,6 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await api.login(email, password, mfaCode);
       if (res.user) {
         setUser(res.user);
+        liveSocket.reconnect();
       }
       return res;
     } finally {

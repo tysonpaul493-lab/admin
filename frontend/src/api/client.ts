@@ -22,15 +22,15 @@ function getToken(): string | null {
 }
 
 async function fetchWithFallback(endpoint: string, options: RequestInit = {}): Promise<Response> {
-  // Candidate endpoints in priority order
-  const targets = [
-    `${API_BASE}${endpoint}`,
-    `http://127.0.0.1:8000/api/v1${endpoint}`,
-    `http://localhost:8000/api/v1${endpoint}`,
-  ];
-
-  if (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    targets.push(`http://${window.location.hostname}:8000/api/v1${endpoint}`);
+  const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+  // Candidate endpoints in priority order (strictly HTTPS same-origin/configured base when served over HTTPS)
+  const targets = [`${API_BASE}${endpoint}`];
+  if (!isHttps) {
+    targets.push(`http://127.0.0.1:8000/api/v1${endpoint}`);
+    targets.push(`http://localhost:8000/api/v1${endpoint}`);
+    if (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      targets.push(`http://${window.location.hostname}:8000/api/v1${endpoint}`);
+    }
   }
 
   for (const targetUrl of targets) {
@@ -42,6 +42,11 @@ async function fetchWithFallback(endpoint: string, options: RequestInit = {}): P
         signal: controller.signal,
       });
       clearTimeout(timer);
+      if (res.status === 401 && endpoint !== '/auth/login' && typeof window !== 'undefined') {
+        localStorage.removeItem('ambulance_admin_token');
+        localStorage.removeItem('ambulance_admin_user');
+        window.dispatchEvent(new Event('admin-auth-expired'));
+      }
       if (res.ok || res.status === 401 || res.status === 422 || res.status === 403 || res.status === 400 || res.status === 404) {
         return res;
       }

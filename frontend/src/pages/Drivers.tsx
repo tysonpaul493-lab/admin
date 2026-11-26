@@ -218,11 +218,17 @@ export const Drivers: React.FC = () => {
                   {/* Driver Name & Photo */}
                   <td className="py-3 px-3 sm:px-4 whitespace-nowrap">
                     <div className="flex items-center gap-3.5">
-                      <img
-                        src={d.profile_photo_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'}
-                        alt={d.full_name}
-                        className="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-xs"
-                      />
+                      {d.profile_photo_url ? (
+                        <img
+                          src={d.profile_photo_url}
+                          alt={d.full_name}
+                          className="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-xs"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-teal-50 text-teal-700 font-bold text-sm flex items-center justify-center border border-teal-200 shadow-xs">
+                          {(d.full_name || 'D').charAt(0).toUpperCase()}
+                        </div>
+                      )}
                       <div>
                         <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
                           <span>{d.full_name}</span>
@@ -295,10 +301,12 @@ export const Drivers: React.FC = () => {
                   {/* Revenue / Earnings */}
                   <td className="py-3.5 px-3 sm:px-4 whitespace-nowrap font-mono">
                     <div className="text-emerald-700 font-extrabold text-sm">
-                      ₹{(d.total_revenue || (d.completed_trips_count * 1250)).toLocaleString()}
+                      ₹{Number(d.total_revenue || 0).toLocaleString()}
                     </div>
                     <div className="text-[10px] text-slate-400 font-sans mt-0.5">
-                      ₹{Math.round((d.total_revenue || (d.completed_trips_count * 1250)) / Math.max(1, d.completed_trips_count)).toLocaleString()} / trip avg
+                      {d.completed_trips_count > 0
+                        ? `₹${Math.round(Number(d.total_revenue || 0) / d.completed_trips_count).toLocaleString()} / trip avg`
+                        : '—'}
                     </div>
                   </td>
 
@@ -406,14 +414,20 @@ export const Drivers: React.FC = () => {
           <div className="bg-white border border-slate-200 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 my-8">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200">
               <div className="flex items-center gap-3">
-                <img
-                  src={selectedDriver.profile_photo_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'}
-                  alt={selectedDriver.full_name}
-                  className="w-12 h-12 rounded-full object-cover border border-slate-200 shadow-xs"
-                />
+                {selectedDriver.profile_photo_url ? (
+                  <img
+                    src={selectedDriver.profile_photo_url}
+                    alt={selectedDriver.full_name}
+                    className="w-12 h-12 rounded-full object-cover border border-slate-200 shadow-xs"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-teal-50 text-teal-700 font-bold text-lg flex items-center justify-center border border-teal-200 shadow-xs">
+                    {(selectedDriver.full_name || 'D').charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <div>
                   <h2 className="text-lg font-bold text-slate-900">{selectedDriver.full_name}</h2>
-                  <span className="text-xs text-slate-500 font-mono">Licence: {selectedDriver.licence_number} • {selectedDriver.qualification_level}</span>
+                  <span className="text-xs text-slate-500 font-mono">Licence: {selectedDriver.licence_number || '—'} {selectedDriver.qualification_level ? `• ${selectedDriver.qualification_level}` : ''}</span>
                 </div>
               </div>
               <button onClick={() => setSelectedDriver(null)} className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition">
@@ -429,9 +443,9 @@ export const Drivers: React.FC = () => {
                   Paramedic Credentials
                 </h3>
                 <div><span className="text-slate-500">Contact:</span> <a href={`tel:${selectedDriver.phone}`} className="font-mono text-teal-700 font-bold ml-1 hover:underline">{selectedDriver.phone}</a></div>
-                <div><span className="text-slate-500">Email:</span> <span className="text-slate-800 ml-1">{selectedDriver.email || 'paramedic@emergency.gov'}</span></div>
-                <div><span className="text-slate-500">Licence Expiry:</span> <span className="font-mono text-slate-800 ml-1">{selectedDriver.licence_expiry}</span></div>
-                <div><span className="text-slate-500">Total Billed Revenue:</span> <span className="font-mono font-extrabold text-emerald-700 ml-1">₹{(selectedDriver.total_revenue || (selectedDriver.completed_trips_count * 1250)).toLocaleString()}</span></div>
+                <div><span className="text-slate-500">Email:</span> <span className="text-slate-800 ml-1">{selectedDriver.email || '—'}</span></div>
+                <div><span className="text-slate-500">Licence Expiry:</span> <span className="font-mono text-slate-800 ml-1">{selectedDriver.licence_expiry || '—'}</span></div>
+                <div><span className="text-slate-500">Total Billed Revenue:</span> <span className="font-mono font-extrabold text-emerald-700 ml-1">₹{Number(selectedDriver.total_revenue || 0).toLocaleString()}</span></div>
               </div>
 
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
@@ -440,9 +454,9 @@ export const Drivers: React.FC = () => {
                   Assigned Vehicle Specs
                 </h3>
                 <div><span className="text-slate-500">Plate Number:</span> <span className="font-mono font-bold text-slate-900 ml-1">{selectedDriver.assigned_ambulance?.registration_number || 'N/A'}</span></div>
-                <div><span className="text-slate-500">Vehicle Model:</span> <span className="text-slate-800 font-semibold ml-1">{selectedDriver.assigned_ambulance?.vehicle_model || 'Force Traveller 3350 (2024)'}</span></div>
-                <div><span className="text-slate-500">Vehicle Type:</span> <span className="font-mono font-bold text-red-700 ml-1">{selectedDriver.assigned_ambulance?.vehicle_type || 'ALS'}</span></div>
-                <div><span className="text-slate-500">Permit Number:</span> <span className="font-mono text-slate-800 ml-1">{selectedDriver.assigned_ambulance?.permit_number || 'PERMIT-EMG-1024'}</span></div>
+                <div><span className="text-slate-500">Vehicle Model:</span> <span className="text-slate-800 font-semibold ml-1">{selectedDriver.assigned_ambulance?.vehicle_model || '—'}</span></div>
+                <div><span className="text-slate-500">Vehicle Type:</span> <span className="font-mono font-bold text-red-700 ml-1">{selectedDriver.assigned_ambulance?.vehicle_type || '—'}</span></div>
+                <div><span className="text-slate-500">Permit Number:</span> <span className="font-mono text-slate-800 ml-1">{selectedDriver.assigned_ambulance?.permit_number || '—'}</span></div>
                 <div><span className="text-slate-500">Insurance Policy:</span> <span className="font-mono text-slate-800 ml-1">{selectedDriver.assigned_ambulance?.insurance_policy || 'POL-ICICI-789100'}</span></div>
               </div>
             </div>

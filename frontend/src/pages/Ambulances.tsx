@@ -3,6 +3,7 @@ import {
   Truck, Plus, Search, RefreshCw, XCircle
 } from 'lucide-react';
 import { api } from '../api/client';
+import { liveSocket } from '../api/liveSocket';
 import { Ambulance, VehicleType } from '../types';
 import { useAuth } from '../context/AuthContext';
 
@@ -47,6 +48,18 @@ export const Ambulances: React.FC = () => {
 
   useEffect(() => {
     loadData();
+    const unsubBooking = liveSocket.onBookingUpdate(() => {
+      loadData();
+    });
+    const unsubEvent = liveSocket.onLiveEvent((evt) => {
+      if (['DRIVER_STATUS', 'DRIVER_LOCATION', 'BOOKING_CREATED', 'TRIP_COMPLETED'].includes(evt.type)) {
+        loadData();
+      }
+    });
+    return () => {
+      unsubBooking();
+      unsubEvent();
+    };
   }, []);
 
   const handleAddSubmit = async (e: React.FormEvent) => {
@@ -64,11 +77,11 @@ export const Ambulances: React.FC = () => {
         insurance_expiry: newInsurance,
         permit_expiry: newPermit,
         operational_status: 'AVAILABLE',
-        latitude: 11.0168,
-        longitude: 76.9558,
+        latitude: null as any,
+        longitude: null as any,
         speed_kmh: 0,
         heading: 0,
-        battery_fuel_percentage: 100,
+        battery_fuel_percentage: null as any,
         service_zone: newZone,
       });
 

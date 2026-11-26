@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
+import { liveSocket } from '../api/liveSocket';
 
 interface PublicUser {
   id: number;
@@ -29,9 +30,9 @@ export const UsersPage: React.FC = () => {
       if (Array.isArray(data)) {
         setUsers(data.map((u: any) => ({
           id: u.id,
-          name: u.name || 'Emergency Caller',
+          name: u.name || '—',
           phone: u.phone || '—',
-          email: u.email || (u.id ? `user_${u.id}@emergency.org` : '—'),
+          email: u.email || '—',
           is_verified: true,
           is_active: u.status !== 'SUSPENDED',
           total_bookings: u.bookings_count || 0,
@@ -51,18 +52,30 @@ export const UsersPage: React.FC = () => {
 
   useEffect(() => {
     loadUsers();
+    const unsubBooking = liveSocket.onBookingUpdate(() => {
+      loadUsers();
+    });
+    const unsubEvent = liveSocket.onLiveEvent(() => {
+      loadUsers();
+    });
+    return () => {
+      unsubBooking();
+      unsubEvent();
+    };
   }, []);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<PublicUser | null>(null);
 
-  const toggleUserStatus = (userId: number) => {
-    setUsers(prev => prev.map(u => {
-      if (u.id === userId) {
-        return { ...u, is_active: !u.is_active };
-      }
-      return u;
-    }));
+  const toggleUserStatus = async (userId: number) => {
+    try {
+      const res = await api.toggleUserStatus(userId);
+      setUsers(prev => prev.map(u => (
+        u.id === userId ? { ...u, is_active: res.status !== 'SUSPENDED' } : u
+      )));
+    } catch (err) {
+      console.error('Failed to update user status:', err);
+    }
   };
 
   const filteredUsers = users.filter(u => {

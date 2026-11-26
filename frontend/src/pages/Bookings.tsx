@@ -796,7 +796,7 @@ export const Bookings: React.FC = () => {
                     {(() => {
                       const dName = b.driver?.full_name || (b.driver as any)?.name || (b as any).driver_name;
                       const regPlate = b.ambulance?.registration_number || (b as any).vehicle_plate || (b as any).assigned_ambulance?.registration_number;
-                      const licNum = b.driver?.licence_number || (b as any).licence_number || 'VERIFIED-EMT-108';
+                      const licNum = b.driver?.licence_number || (b as any).licence_number || '—';
 
                       if (dName && dName !== 'Unassigned') {
                         return (
@@ -810,7 +810,7 @@ export const Bookings: React.FC = () => {
                               <div>
                                 <span className="text-slate-500 block text-[11px]">Ambulance Plate / Type:</span>
                                 <span className="font-mono font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200 inline-block shadow-xs">
-                                  {regPlate && regPlate !== 'N/A' && regPlate !== '--' ? regPlate : 'TN-38-EMG-1081'} ({b.ambulance?.vehicle_type || 'ALS'})
+                                  {regPlate && regPlate !== 'N/A' && regPlate !== '--' ? regPlate : '—'} ({b.ambulance?.vehicle_type || '—'})
                                 </span>
                               </div>
                             </div>
@@ -1097,9 +1097,9 @@ export const Bookings: React.FC = () => {
                     <>
                       <div><span className="text-slate-500">Paramedic:</span> <span className="text-slate-900 font-semibold">{dName}</span></div>
                       {dPhone && <div><span className="text-slate-500">Phone:</span> <a href={`tel:${dPhone}`} className="text-teal-700 font-mono font-bold hover:underline">{dPhone}</a></div>}
-                      <div><span className="text-slate-500">Ambulance Plate:</span> <span className="text-slate-900 font-mono font-bold">{regPlate || 'TN-38-EMG-1081'}</span></div>
+                      <div><span className="text-slate-500">Ambulance Plate:</span> <span className="text-slate-900 font-mono font-bold">{regPlate || '—'}</span></div>
                       <div><span className="text-slate-500">Speed / Heading:</span> <span className="text-slate-700 font-mono">{selectedBooking.ambulance?.speed_kmh || 0} km/h • {selectedBooking.ambulance?.heading || 0}°</span></div>
-                      <div><span className="text-slate-500">Qualification:</span> <span className="text-slate-700 font-mono">PARAMEDIC (ALS)</span></div>
+                      <div><span className="text-slate-500">Vehicle Type:</span> <span className="text-slate-700 font-mono">{selectedBooking.ambulance?.vehicle_type || '—'}</span></div>
                     </>
                   ) : (
                     <div className="text-slate-500 text-xs italic">
@@ -1211,7 +1211,7 @@ export const Bookings: React.FC = () => {
                   <option value="">-- Choose Available Paramedic --</option>
                   {eligibleDrivers.map((d) => (
                     <option key={d.id} value={d.id}>
-                      {d.full_name} ({d.assigned_ambulance?.registration_number || 'TN38CB1234'}) • {d.phone}
+                      {d.full_name} ({d.assigned_ambulance?.registration_number || 'No Plate'}) • {d.phone}
                     </option>
                   ))}
                 </select>
@@ -1289,7 +1289,7 @@ export const Bookings: React.FC = () => {
                   <option value="">-- Choose New Available Paramedic --</option>
                   {eligibleDrivers.map((d) => (
                     <option key={d.id} value={d.id}>
-                      {d.full_name} ({d.assigned_ambulance?.registration_number || 'TN38CB1234'})
+                      {d.full_name} ({d.assigned_ambulance?.registration_number || 'No Plate'})
                     </option>
                   ))}
                 </select>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api/client';
+import { liveSocket } from '../api/liveSocket';
 import { OperationalAlert } from '../types';
 import { Bell, CheckCircle, ShieldAlert, Filter, RefreshCw, Send, Plus, XCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -30,8 +31,14 @@ export const Alerts: React.FC = () => {
 
   useEffect(() => {
     loadAlerts();
+    const unsubEvent = liveSocket.onLiveEvent(() => {
+      loadAlerts();
+    });
     const interval = setInterval(loadAlerts, 10000);
-    return () => clearInterval(interval);
+    return () => {
+      unsubEvent();
+      clearInterval(interval);
+    };
   }, []);
 
   const handleResolve = async (id: number) => {

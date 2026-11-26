@@ -454,9 +454,34 @@ export const api = {
     return [];
   },
 
-  async acknowledgeAlert(_id: number): Promise<void> {},
+  async acknowledgeAlert(id: number): Promise<void> {
+    const token = getToken();
+    await fetchWithFallback(`/alerts/${id}/acknowledge`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+    });
+  },
 
-  async resolveAlert(_id: number): Promise<void> {},
+  async resolveAlert(id: number): Promise<void> {
+    const token = getToken();
+    await fetchWithFallback(`/alerts/${id}/resolve`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+    });
+  },
+
+  async toggleUserStatus(id: number): Promise<{ status: string }> {
+    const token = getToken();
+    const res = await fetchWithFallback(`/users/${id}/toggle-status`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+    });
+    const json = await res.json().catch(() => ({}));
+    if (res.ok && json.success) {
+      return { status: json.status || 'ACTIVE' };
+    }
+    throw new Error(json.message || 'Failed to update user status.');
+  },
 
   async broadcastAnnouncement(title: string, message: string, severity: OperationalAlert['severity']): Promise<OperationalAlert> {
     const token = getToken();

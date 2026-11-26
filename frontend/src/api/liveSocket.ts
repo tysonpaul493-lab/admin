@@ -161,7 +161,7 @@ class LiveSocketService {
 
       if (!isNaN(lat) && !isNaN(lng)) {
         const liveEv: LiveTelemetryEvent = {
-          id: `loc-${Date.now()}-${Math.random()}`,
+          id: `loc-${Date.now()}-${Math.floor(performance.now() * 1000)}`,
           timestamp: timeStr,
           type: 'LOCATION',
           title: `Ambulance Telemetry: ${driverName}`,
@@ -193,7 +193,14 @@ class LiveSocketService {
     }
 
     // 2. New Emergency Booking Placed by User
-    else if (eventName === 'BookingCreated' || eventName === 'NewEmergencyBooking' || eventName.includes('Created')) {
+    else if (
+      eventName === 'BookingCreated' ||
+      eventName === 'NewEmergencyBooking' ||
+      eventName === 'BookingRequested' ||
+      eventName === 'NewEmergencyIncident' ||
+      eventName === 'new-booking-request' ||
+      eventName.includes('Created')
+    ) {
       const patientName = payload.patient_name || payload.name || 'Emergency Patient';
       const patientPhone = payload.callback_phone || payload.patient_phone || payload.phone || '';
       const ref = payload.booking_reference || `#BK-${payload.id || payload.booking_id || ''}`;
@@ -252,9 +259,23 @@ class LiveSocketService {
       }));
     }
 
-    // 4. Trip Status Advanced (Arrived pickup / Patient onboard / Arrived hospital)
-    else if (eventName === 'TripStatusUpdated' || eventName === 'BookingUpdated') {
-      const status = payload.status || (payload.booking && payload.booking.status) || '';
+    // 4. Trip Status Advanced (Arrived pickup / Patient onboard / Arrived hospital / Completed / Cancelled)
+    else if (
+      eventName === 'TripStatusUpdated' ||
+      eventName === 'BookingUpdated' ||
+      eventName === 'TripCompleted' ||
+      eventName === 'BookingCancelled' ||
+      eventName === 'TripCancelled' ||
+      eventName === 'DriverStatusUpdated'
+    ) {
+      const status =
+        eventName === 'TripCompleted'
+          ? 'trip_completed'
+          : (eventName === 'BookingCancelled' || eventName === 'TripCancelled')
+          ? 'cancelled'
+          : eventName === 'DriverStatusUpdated'
+          ? (payload.is_online ? 'DRIVER_ONLINE' : 'DRIVER_OFFLINE')
+          : (payload.status || (payload.booking && payload.booking.status) || '');
       const ref = payload.booking_reference || (payload.booking && payload.booking.booking_reference) || '';
 
       const readableStatus: { [k: string]: string } = {

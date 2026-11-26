@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api/client';
+import { liveSocket } from '../api/liveSocket';
 import { DashboardStats, Booking } from '../types';
 import { FileText, Download, CheckCircle, TrendingUp, IndianRupee, Clock, Activity, RefreshCw } from 'lucide-react';
 
@@ -26,10 +27,23 @@ export const Reports: React.FC = () => {
 
   useEffect(() => {
     loadData();
+    const unsubBooking = liveSocket.onBookingUpdate(() => {
+      loadData();
+    });
+    const unsubEvent = liveSocket.onLiveEvent((evt) => {
+      if (['TRIP_COMPLETED', 'BOOKING_CREATED', 'BOOKING_CANCELLED', 'INCIDENT'].includes(evt.type)) {
+        loadData();
+      }
+    });
+    return () => {
+      unsubBooking();
+      unsubEvent();
+    };
   }, []);
 
   const completed = bookings.filter(b => ['COMPLETED', 'completed', 'trip_completed'].includes(b.status));
-  const totalRevenue = stats?.metrics?.total_revenue?.formatted || `₹${(completed.length * 1250).toLocaleString()}`;
+  const computedRevenue = completed.reduce((sum, b) => sum + Number((b as any).total_fare ?? (b as any).earnings ?? 0), 0);
+  const totalRevenue = stats?.metrics?.total_revenue?.formatted || `₹${computedRevenue.toLocaleString()}`;
 
   const downloadJsonReport = () => {
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify({ stats, bookings }, null, 2));
@@ -43,11 +57,11 @@ export const Reports: React.FC = () => {
     const headers = ['Booking Reference', 'Patient Name', 'Phone', 'Paramedic Crew', 'Pickup Address', 'Receiving Hospital', 'Status', 'Date'];
     const rows = bookings.map(b => [
       `"${b.booking_reference || b.id}"`,
-      `"${b.patient_name || b.requester_name || 'Emergency Patient'}"`,
+      `"${b.patient_name || b.requester_name || ''}"`,
       `"${b.requester_phone || (b as any).patient_phone || ''}"`,
       `"${b.driver?.full_name || (b.driver as any)?.name || (b as any).driver_name || 'Unassigned'}"`,
       `"${(b.pickup_address || '').replace(/"/g, '""')}"`,
-      `"${(b.hospital?.name || (b as any).destination || 'Emergency Hospital').replace(/"/g, '""')}"`,
+      `"${(b.hospital?.name || (b as any).destination || '').replace(/"/g, '""')}"`,
       `"${b.status}"`,
       `"${b.requested_at || (b as any).created_at || ''}"`
     ]);
@@ -120,7 +134,7 @@ export const Reports: React.FC = () => {
             <Clock className="w-4 h-4" />
           </div>
           <p className="text-2xl font-extrabold text-slate-900">
-            {stats?.metrics?.avg_response_time_seconds?.value ? `${(stats.metrics.avg_response_time_seconds.value / 60).toFixed(1)} min` : '7.8 min'}
+            {stats?.metrics?.avg_response_time_seconds?.value ? `${(stats.metrics.avg_response_time_seconds.value / 60).toFixed(1)} min` : '—'}
           </p>
           <p className="text-xs text-slate-400 mt-1">Within golden hour SLA standard</p>
         </div>
@@ -130,7 +144,11 @@ export const Reports: React.FC = () => {
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Dispatch Success Rate</span>
             <TrendingUp className="w-4 h-4" />
           </div>
-          <p className="text-2xl font-extrabold text-slate-900">98.4%</p>
+          <p className="text-2xl font-extrabold text-slate-900">
+            {bookings.length > 0
+              ? `${((bookings.filter(b => !['CANCELLED', 'cancelled', 'failed'].includes(b.status)).length / bookings.length) * 100).toFixed(1)}%`
+              : '—'}
+          </p>
           <p className="text-xs text-slate-400 mt-1">First-dispatch acceptance rate</p>
         </div>
       </div>
@@ -167,13 +185,13 @@ export const Reports: React.FC = () => {
                 {completed.slice(0, 15).map((b) => (
                   <tr key={b.id} className="hover:bg-slate-50/50">
                     <td className="py-2.5 px-3 font-mono font-bold text-slate-900">#{b.booking_reference || b.id}</td>
-                    <td className="py-2.5 px-3 font-medium text-slate-800">{b.patient_name || b.requester_name || 'Emergency Intake'}</td>
+                    <td className="py-2.5 px-3 font-medium text-slate-800">{b.patient_name || b.requester_name || '—'}</td>
                     <td className="py-2.5 px-3 font-semibold text-slate-700">
-                      {b.driver?.full_name || (b.driver as any)?.name || (b as any).driver_name || 'Paramedic Unit'}
+                      {b.driver?.full_name || (b.driver as any)?.name || (b as any).driver_name || 'Unassigned'}
                     </td>
-                    <td className="py-2.5 px-3 text-slate-500 max-w-xs truncate">{b.pickup_address || 'Regional dispatch point'}</td>
+                    <td className="py-2.5 px-3 text-slate-500 max-w-xs truncate">{b.pickup_address || '—'}</td>
                     <td className="py-2.5 px-3 text-slate-700 max-w-xs truncate">
-                      {b.hospital?.name || (b as any).hospital_name || (b as any).destination || 'Emergency Hospital'}
+                      {b.hospital?.name || (b as any).hospital_name || (b as any).destination || '—'}
                     </td>
                     <td className="py-2.5 px-3">
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 uppercase">
@@ -181,7 +199,9 @@ export const Reports: React.FC = () => {
                       </span>
                     </td>
                     <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-700">
-                      ₹{(b as any).total_fare ? Number((b as any).total_fare).toLocaleString() : '1,250'}
+                      {(b as any).total_fare != null
+                        ? `₹${Number((b as any).total_fare).toLocaleString()}`
+                        : ((b as any).earnings != null ? `₹${Number((b as any).earnings).toLocaleString()}` : '—')}
                     </td>
                   </tr>
                 ))}

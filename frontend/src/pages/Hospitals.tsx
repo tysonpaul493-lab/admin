@@ -21,14 +21,14 @@ export const Hospitals: React.FC = () => {
 
   // New Hospital State
   const [name, setName] = useState('');
-  const [category, setCategory] = useState('Apex Level 1 Trauma Center');
+  const [category, setCategory] = useState('');
   const [address, setAddress] = useState('');
-  const [lat, setLat] = useState('11.0168');
-  const [lng, setLng] = useState('76.9558');
+  const [lat, setLat] = useState('');
+  const [lng, setLng] = useState('');
   const [phone, setPhone] = useState('');
   const [emergencyPhone, setEmergencyPhone] = useState('');
-  const [zone, setZone] = useState('Central');
-  const [services, setServices] = useState('trauma_level_1, cardiac_cath_lab, stroke_unit');
+  const [zone, setZone] = useState('');
+  const [services, setServices] = useState('');
 
   const loadHospitals = async () => {
     try {
@@ -48,19 +48,28 @@ export const Hospitals: React.FC = () => {
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const parsedLat = parseFloat(lat);
+    const parsedLng = parseFloat(lng);
+    if (!Number.isFinite(parsedLat) || !Number.isFinite(parsedLng) || (parsedLat === 0 && parsedLng === 0)) {
+      alert('Please enter valid non-zero GPS latitude and longitude coordinates.');
+      return;
+    }
+
+    const parsedServices = services.split(',').map(s => s.trim()).filter(Boolean);
+
     try {
       const created = await api.addHospital({
         name,
-        category,
+        category: category || 'General Hospital',
         address,
-        latitude: parseFloat(lat),
-        longitude: parseFloat(lng),
+        latitude: parsedLat,
+        longitude: parsedLng,
         phone,
         emergency_contact: emergencyPhone,
-        verified_services: services.split(',').map(s => s.trim()),
-        specialties: ['Emergency Trauma Surgery', 'Cardiology Resuscitation'],
+        verified_services: parsedServices,
+        specialties: parsedServices,
         verification_status: 'VERIFIED',
-        service_zone: zone,
+        service_zone: zone || undefined,
         has_live_integration: true,
       });
 
@@ -250,7 +259,7 @@ export const Hospitals: React.FC = () => {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Coimbatore Medical College Hospital (CMCH)"
+                  placeholder="e.g. City Government Medical College Hospital"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:border-teal-500"
@@ -309,7 +318,7 @@ export const Hospitals: React.FC = () => {
                   <input
                     type="text"
                     required
-                    placeholder="0422-XXXXXXX"
+                    placeholder="+91 XXXXXXXXXX"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:border-teal-500"

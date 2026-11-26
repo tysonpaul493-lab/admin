@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import React, { useEffect, useRef, useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import {
   Truck, Radio, Filter, RefreshCw, AlertTriangle,
@@ -45,6 +45,20 @@ const hospitalIcon = L.divIcon({
 });
 
 export const LiveMap: React.FC = () => {
+  const MapAutoCenter: React.FC<{ points: [number, number][] }> = ({ points }) => {
+    const map = useMap();
+    const hasCentered = useRef(false);
+    useEffect(() => {
+      if (hasCentered.current || points.length === 0) return;
+      hasCentered.current = true;
+      if (points.length === 1) {
+        map.setView(points[0], 13, { animate: true });
+      } else {
+        map.fitBounds(points, { padding: [48, 48], maxZoom: 14 });
+      }
+    }, [map, points]);
+    return null;
+  };
   const [ambulances, setAmbulances] = useState<Ambulance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [livePolling, setLivePolling] = useState(true);
@@ -218,12 +232,12 @@ export const LiveMap: React.FC = () => {
             onChange={(e) => setZoneFilter(e.target.value)}
             className="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:border-teal-500 text-xs font-medium"
           >
-            <option value="ALL">All Service Zones (Coimbatore)</option>
-            <option value="Central">Central (Gandhipuram / Town Hall)</option>
-            <option value="East">East (Peelamedu / Avinashi Rd)</option>
-            <option value="West">West (RS Puram / Vadavalli)</option>
-            <option value="North">North (Saibaba Colony / Thudiyalur)</option>
-            <option value="South">South (Singanallur / Trichy Rd)</option>
+            <option value="ALL">All Service Zones</option>
+            {Array.from(new Set(
+              ambulances.map(a => a.service_zone).filter(Boolean)
+            )).map((zoneName) => (
+              <option key={zoneName} value={zoneName!}>{zoneName}</option>
+            ))}
           </select>
         </div>
 
@@ -251,11 +265,16 @@ export const LiveMap: React.FC = () => {
       {/* Main Map Container */}
       <div className="relative rounded-2xl overflow-hidden border border-slate-200 shadow-sm h-[520px] lg:h-[580px] max-h-[65vh] bg-slate-100 w-full isolate z-0">
         <MapContainer
-          center={[11.0168, 76.9658]}
-          zoom={13}
+          center={[20.5937, 78.9629]}
+          zoom={5}
           scrollWheelZoom={false}
           className="h-full w-full z-0"
         >
+          <MapAutoCenter
+            points={filteredAmbulances
+              .filter(a => Number.isFinite(Number(a.latitude)) && Number.isFinite(Number(a.longitude)) && (Number(a.latitude) !== 0 || Number(a.longitude) !== 0))
+              .map(a => [Number(a.latitude), Number(a.longitude)] as [number, number])}
+          />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

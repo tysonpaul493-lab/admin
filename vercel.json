@@ -4,10 +4,6 @@
   "buildCommand": "npm run build",
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://festival-coaches-pending-article.trycloudflare.com/api/$1"
-    },
-    {
       "source": "/((?!assets/|.*\\..*).*)",
       "destination": "/index.html"
     }
